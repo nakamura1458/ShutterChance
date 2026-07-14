@@ -1,83 +1,74 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { uploadPhoto } from "@/services/photo.service";
 import type { CapturedPhoto } from "@/types/camera";
-
 
 type UseUploadProps = {
   eventId: string;
   eventToken: string;
 };
 
-
 type UploadParams = {
   guestName: string;
   capturedPhoto: CapturedPhoto | null;
 };
 
-
 export function useUpload({
   eventId,
   eventToken,
 }: UseUploadProps) {
+  const [loading, setLoading] = useState(false);
 
-  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<Error | null>(
+    null
+  );
 
-  const [uploadError, setUploadError] =
-    useState<string | null>(null);
+  const upload = useCallback(
+    async ({
+      guestName,
+      capturedPhoto,
+    }: UploadParams) => {
+      if (!capturedPhoto) return false;
 
+      setLoading(true);
+      setError(null);
 
-  const upload = async ({
-    guestName,
-    capturedPhoto,
-  }: UploadParams) => {
+      try {
+        await uploadPhoto(
+          eventId,
+          eventToken,
+          guestName,
+          capturedPhoto.blob
+        );
 
-    if (!capturedPhoto) {
-      return false;
-    }
+        return true;
+      } catch (err) {
+        const uploadError =
+          err instanceof Error
+            ? err
+            : new Error(
+                "画像保存に失敗しました"
+              );
 
+        setError(uploadError);
 
-    try {
-
-      setIsUploading(true);
-      setUploadError(null);
-
-
-      await uploadPhoto({
-        eventId,
-        eventToken,
-        guestName,
-        capturedPhoto,
-      });
-
-
-      return true;
-
-
-    } catch (error) {
-
-      console.error(error);
-
-      setUploadError(
-        "アップロードに失敗しました"
-      );
-
-      return false;
-
-
-    } finally {
-
-      setIsUploading(false);
-
-    }
-  };
-
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [eventId, eventToken]
+  );
 
   return {
-    upload,
-    isUploading,
-    uploadError,
-  };
+    state: {
+      loading,
+      error,
+    },
 
+    actions: {
+      upload,
+    },
+  };
 }
