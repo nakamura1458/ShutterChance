@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { uploadPhoto } from "@/services/photo.service";
+import { uploadPhoto } from "@/services/photo-upload.service";
 import type { CapturedPhoto } from "@/types/camera";
 
 type UseUploadProps = {

@@ -1,63 +1,80 @@
 "use client";
 
+import { useState } from "react";
 import { useCamera } from "./useCamera";
 import { useUpload } from "./useUpload";
 
 type Props = {
-  eventId: string;
-  eventToken: string;
+    eventId: string;
+    eventToken: string;
+    enabled: boolean;
 };
 
 export function useCameraFlow({
-  eventId,
-  eventToken,
-}: Props) {
-  const camera = useCamera();
-
-  const upload = useUpload({
     eventId,
     eventToken,
-  });
+    enabled,
+}: Props) {
 
-  async function uploadPhoto() {
-    const success =
-      await upload.actions.upload({
-        guestName: "ゲスト",
-        capturedPhoto:
-          camera.state.capturedPhoto,
-      });
+    const camera = useCamera({
+        enabled,
+    });
 
-    if (!success) {
-      alert(
-        upload.state.error?.message ??
-          "アップロードに失敗しました"
-      );
-      return;
+    const upload = useUpload({
+        eventId,
+        eventToken,
+    });
+
+    const [status, setStatus] =
+        useState<
+        "idle"
+        | "uploading"
+        | "success"
+        | "error"
+        >("idle");
+
+    async function handleUpload( guestName = "ゲスト" ) {
+
+        setStatus("uploading");
+
+        const success =
+            await upload.actions.upload({
+                guestName,
+                capturedPhoto:  camera.state.capturedPhoto,
+            });
+
+        if (!success) {
+            setStatus("error");
+            return false;
+        }
+        setStatus("success");
+        return true;
     }
 
-    alert("アップロードしました！");
+    async function handleRetake(){
+        setStatus("idle");
+        await camera.actions.retakePhoto();
+    }
 
-    await camera.actions.retakePhoto();
-  }
+    const state = {
+        ...camera.state,
+        uploading:  upload.state.loading,
+        error:      upload.state.error,
+        status,
+    };
 
-  return {
-    state: {
-      ...camera.state,
+    const refs = camera.refs;
 
-      uploading:
-        upload.state.loading,
-    },
+    const actions = {
+        takePhoto:      camera.actions.takePhoto,
+        retakePhoto:    handleRetake,
+        upload:         handleUpload,
+        switchCamera:   camera.actions.switchCamera,
+    };
 
-    refs: camera.refs,
-
-    actions: {
-      takePhoto:
-        camera.actions.takePhoto,
-
-      retakePhoto:
-        camera.actions.retakePhoto,
-
-      upload: uploadPhoto,
-    },
-  };
+    return {
+        state,
+        refs,
+        actions,
+    };
 }
