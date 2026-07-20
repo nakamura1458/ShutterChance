@@ -88,7 +88,7 @@ export default function CameraUpload({
   }
 
   return (
-    <Card className="rounded-2xl shadow-md border-0">
+    <Card className="shadow-md border-0">
       <CardHeader className="pb-8">
         <CardTitle className="text-2xl">
           📷 写真を撮影

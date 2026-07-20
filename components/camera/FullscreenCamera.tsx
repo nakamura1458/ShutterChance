@@ -25,7 +25,7 @@ export default function FullscreenCamera({
   return (
     <div className="fixed inset-0 z-[100] bg-black">
 
-        <div className="relative w-full aspect-[4/5] overflow-hidden rounded-2xl bg-black">
+        <div className="fixed inset-0 bg-black">
             <CameraView videoRef={videoRef} />
         </div>
 

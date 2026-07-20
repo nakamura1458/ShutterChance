@@ -60,6 +60,10 @@ export function useCamera({
           videoRef.current.srcObject =
             stream;
           await videoRef.current.play();
+          console.log({
+            videoWidth: videoRef.current.videoWidth,
+            videoHeight: videoRef.current.videoHeight,
+          });
         }
 
         setIsCameraReady(true);
@@ -93,21 +97,22 @@ export function useCamera({
       stopCamera();
 
       try {
-        const stream =
-          await navigator.mediaDevices.getUserMedia({
-            video:{
-              facingMode:{
-                ideal: nextMode,
-              },
-            },
-            audio:false,
-          });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: facingMode,
+          },
+          audio: false,
+        });
 
         streamRef.current = stream;
 
         if(videoRef.current){
           videoRef.current.srcObject = stream;
           await videoRef.current.play();
+          console.log({
+            videoWidth: videoRef.current.videoWidth,
+            videoHeight: videoRef.current.videoHeight,
+          });
         }
 
         setFacingMode(nextMode);
