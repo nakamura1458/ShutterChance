@@ -28,7 +28,6 @@ export default function NameInput({
         placeholder="例：山田 太郎"
         value={guestName}
         onChange={(e) => {
-          console.log("入力イベント:", e.target.value);
           onGuestNameChange(e.target.value);
         }}
         className="h-12"
@@ -36,7 +35,6 @@ export default function NameInput({
 
       <Button
         onClick={() => {
-          console.log("開始クリック");
           onStart();
         }}
         disabled={!isValid}

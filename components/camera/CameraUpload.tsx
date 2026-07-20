@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import CameraView from "@/components/camera/CameraView";
@@ -9,6 +9,7 @@ import NameInput from "@/components/camera/NameInput";
 import PhotoPreview from "@/components/camera/PhotoPreview";
 import UploadComplete from "@/components/camera/UploadComplete";
 import CameraSwitchButton from "@/components/camera/CameraSwitchButton";
+import CloseButton from "@/components/camera/CloseButton";
 import { useCameraFlow } from "@/hooks/useCameraFlow";
 
 import {
@@ -30,7 +31,9 @@ export default function CameraUpload({
 }: Props) {
   const [guestName, setGuestName] = useState("");
   const [started, setStarted] = useState(false);
+
   const router = useRouter();
+
   const flow = useCameraFlow({
     eventId,
     eventToken,
@@ -42,16 +45,64 @@ export default function CameraUpload({
 
     if (!success) {
       alert(flow.state.error?.message ?? "送信失敗");
+      return;
     }
 
     router.refresh();
     await flow.actions.retakePhoto();
   };
 
+  useEffect(() => {
+    if (started) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [started]);
+
+  // ===========================
+  // 全画面カメラ
+  // ===========================
+  if (
+    started &&
+    !flow.state.capturedPhoto &&
+    flow.state.status !== "success"
+  ) {
+    return (
+      <div className="fixed inset-0 z-[100] overflow-hidden bg-black">
+        <CameraView videoRef={flow.refs.videoRef} />
+
+        <CloseButton
+          onClick={async () => {
+            await flow.actions.retakePhoto();
+            setStarted(false);
+          }}
+        />
+
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[110]">
+          <CaptureButton onClick={flow.actions.takePhoto} />
+        </div>
+
+        <div className="fixed bottom-10 right-6 z-[110]">
+          <CameraSwitchButton onClick={flow.actions.switchCamera} />
+        </div>
+
+        <canvas ref={flow.refs.canvasRef} hidden />
+      </div>
+    );
+  }
+
   return (
     <Card className="rounded-2xl shadow-md border-0">
       <CardHeader className="pb-8">
-        <CardTitle className="text-2xl">📷 写真を撮影</CardTitle>
+        <CardTitle className="text-2xl">
+          📷 写真を撮影
+        </CardTitle>
+
         <CardDescription className="text-base">
           思い出の一枚を撮影してアップロードしましょう
         </CardDescription>
@@ -75,7 +126,7 @@ export default function CameraUpload({
               router.refresh();
               await flow.actions.retakePhoto();
             }}
-            onViewPhotos={async () => {
+            onViewPhotos={() => {
               router.refresh();
 
               requestAnimationFrame(() => {
@@ -87,32 +138,7 @@ export default function CameraUpload({
               });
             }}
           />
-        ) : !flow.state.capturedPhoto ? (
-          <div className="relative">
-
-            <CameraView
-              videoRef={flow.refs.videoRef}
-            />
-
-            <div className="
-              absolute
-              bottom-6
-              left-0
-              right-0
-              flex
-              justify-center
-            ">
-              <CaptureButton
-                onClick={flow.actions.takePhoto}
-              />
-            </div>
-
-            <CameraSwitchButton
-              onClick={flow.actions.switchCamera}
-            />
-
-          </div>
-        ) : (
+        ) : flow.state.capturedPhoto ? (
           <PhotoPreview
             photo={flow.state.capturedPhoto}
             uploading={flow.state.uploading}
@@ -121,7 +147,7 @@ export default function CameraUpload({
               onUpload: handleUpload,
             }}
           />
-        )}
+        ) : null}
 
         <canvas ref={flow.refs.canvasRef} hidden />
       </CardContent>

@@ -1,37 +1,20 @@
 "use client";
 
-import { RefObject, useEffect } from "react";
+import { RefObject } from "react";
 
 type Props = {
   videoRef: RefObject<HTMLVideoElement | null>;
 };
 
-export default function CameraView({
-  videoRef,
-}: Props) {
-
+export default function CameraView({ videoRef }: Props) {
   return (
-    <div className="
-      relative
-      w-full
-      aspect-[4/5]
-      overflow-hidden
-      rounded-2xl
-      bg-black
-    ">
-
+    <div className="absolute inset-0">
       <video
         ref={videoRef}
         autoPlay
         playsInline
-        className="
-          w-full
-          h-full
-          object-cover
-        "
+        className="block h-full w-full object-cover"
       />
-
     </div>
   );
-
 }

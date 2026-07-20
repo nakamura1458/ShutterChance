@@ -9,6 +9,7 @@ export default function UploadComplete({
   onRetake,
   onViewPhotos,
 }: Props) {
+
   return (
     <div
       style={{

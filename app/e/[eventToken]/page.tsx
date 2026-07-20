@@ -2,6 +2,7 @@ import { getEventByToken } from "@/services/event.service";
 import { getPhotos } from "@/services/photo.service";
 import CameraUpload from "@/components/camera/CameraUpload";
 import PhotoList from "@/components/camera/PhotoList";
+import ClientTest from "./ClientTest";
 
 type Props = {
   params: Promise<{
@@ -25,6 +26,13 @@ export default async function EventPage({ params }: Props) {
   }
 
   const photos = await getPhotos(event.id);
+
+  console.log("event", event);
+  console.log("photos", photos);
+  console.log("EVENT PAGE", {
+    eventToken,
+    event,
+  });
 
   return (
     <main className="min-h-screen bg-gray-50">
