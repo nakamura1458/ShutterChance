@@ -14,21 +14,16 @@ export default function CameraSwitchButton({
       type="button"
       onClick={onClick}
       className="
-        absolute
-        right-4
-        top-4
-        z-20
         flex
         h-12
         w-12
         items-center
         justify-center
         rounded-full
-        bg-black/40
+        bg-black/30
         text-white
-        backdrop-blur
-        transition
-        active:scale-90
+        backdrop-blur-md
+        active:scale-95
       "
       aria-label="カメラ切替"
     >

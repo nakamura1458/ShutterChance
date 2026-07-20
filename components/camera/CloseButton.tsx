@@ -11,24 +11,17 @@ export default function CloseButton({ onClick }: Props) {
     <button
       onClick={onClick}
       className="
-        fixed
-        top-6
-        left-6
-        z-[60]
-        flex
-        h-12
-        w-12
-        items-center
-        justify-center
+        flex h-11 w-11 items-center justify-center
         rounded-full
-        bg-black/50
+        bg-black/40
+        backdrop-blur-xl
+        border border-white/10
         text-white
-        backdrop-blur
+        transition-transform
         active:scale-95
       "
-      aria-label="閉じる"
     >
-      <X size={28} />
+      <X className="h-6 w-6" />
     </button>
   );
 }

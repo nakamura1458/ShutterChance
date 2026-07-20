@@ -10,6 +10,7 @@ import PhotoPreview from "@/components/camera/PhotoPreview";
 import UploadComplete from "@/components/camera/UploadComplete";
 import CameraSwitchButton from "@/components/camera/CameraSwitchButton";
 import CloseButton from "@/components/camera/CloseButton";
+import FullscreenCamera from "./FullscreenCamera";
 import { useCameraFlow } from "@/hooks/useCameraFlow";
 
 import {
@@ -73,26 +74,16 @@ export default function CameraUpload({
     flow.state.status !== "success"
   ) {
     return (
-      <div className="fixed inset-0 z-[100] overflow-hidden bg-black">
-        <CameraView videoRef={flow.refs.videoRef} />
-
-        <CloseButton
-          onClick={async () => {
-            await flow.actions.retakePhoto();
-            setStarted(false);
-          }}
-        />
-
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[110]">
-          <CaptureButton onClick={flow.actions.takePhoto} />
-        </div>
-
-        <div className="fixed bottom-10 right-6 z-[110]">
-          <CameraSwitchButton onClick={flow.actions.switchCamera} />
-        </div>
-
-        <canvas ref={flow.refs.canvasRef} hidden />
-      </div>
+      <FullscreenCamera
+        videoRef={flow.refs.videoRef}
+        canvasRef={flow.refs.canvasRef}
+        onCapture={flow.actions.takePhoto}
+        onSwitchCamera={flow.actions.switchCamera}
+        onClose={async () => {
+          await flow.actions.retakePhoto();
+          setStarted(false);
+        }}
+      />
     );
   }
 
