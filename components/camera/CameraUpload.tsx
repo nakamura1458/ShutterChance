@@ -50,11 +50,15 @@ export default function CameraUpload({
     }
 
     router.refresh();
-    await flow.actions.retakePhoto();
   };
 
   useEffect(() => {
-    if (started) {
+    const isCameraOpen =
+      started &&
+      !flow.state.capturedPhoto &&
+      flow.state.status !== "success";
+
+    if (isCameraOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -63,7 +67,11 @@ export default function CameraUpload({
     return () => {
       document.body.style.overflow = "";
     };
-  }, [started]);
+  }, [
+    started,
+    flow.state.capturedPhoto,
+    flow.state.status,
+  ]);
 
   // ===========================
   // 全画面カメラ
