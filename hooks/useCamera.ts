@@ -40,30 +40,21 @@ export function useCamera({
         stopCamera();
         const stream =
           await navigator.mediaDevices.getUserMedia({
-
             video: {
               facingMode: {
                 ideal: facingMode,
               },
-              width: { ideal: 1080 },
-              height: { ideal: 1920 },
-              aspectRatio: { ideal: 9 / 16 },
             },
-
             audio: false,
-
           });
 
         streamRef.current = stream;
 
         if(videoRef.current){
-          videoRef.current.srcObject =
-            stream;
+          videoRef.current.srcObject = stream;
+
           await videoRef.current.play();
-          console.log({
-            videoWidth: videoRef.current.videoWidth,
-            videoHeight: videoRef.current.videoHeight,
-          });
+
         }
 
         setIsCameraReady(true);
@@ -174,6 +165,12 @@ export function useCamera({
       if(!ctx){
         return;
       }
+
+      console.log({
+        screen: `${window.innerWidth} x ${window.innerHeight}`,
+        videoWidth: video.videoWidth,
+        videoHeight: video.videoHeight,
+      });
 
       ctx.drawImage(
         video,

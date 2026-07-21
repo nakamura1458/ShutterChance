@@ -27,13 +27,6 @@ export default async function EventPage({ params }: Props) {
 
   const photos = await getPhotos(event.id);
 
-  console.log("event", event);
-  console.log("photos", photos);
-  console.log("EVENT PAGE", {
-    eventToken,
-    event,
-  });
-
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-6xl space-y-8 px-4 py-8">
