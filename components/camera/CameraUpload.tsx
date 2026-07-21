@@ -10,6 +10,7 @@ import PhotoPreview from "@/components/camera/PhotoPreview";
 import UploadComplete from "@/components/camera/UploadComplete";
 import CameraSwitchButton from "@/components/camera/CameraSwitchButton";
 import CloseButton from "@/components/camera/CloseButton";
+import FullscreenPreview from "./FullscreenPreview";
 import FullscreenCamera from "./FullscreenCamera";
 import { useCameraFlow } from "@/hooks/useCameraFlow";
 
@@ -95,6 +96,20 @@ export default function CameraUpload({
     );
   }
 
+  // ===========================
+  // 全画面プレビュー
+  // ===========================
+  if (started && flow.state.capturedPhoto) {
+    return (
+      <FullscreenPreview
+        photo={flow.state.capturedPhoto}
+        uploading={flow.state.uploading}
+        onRetake={flow.actions.retakePhoto}
+        onUpload={handleUpload}
+      />
+    );
+  }
+
   return (
     <Card className="shadow-md border-0">
       <CardHeader className="pb-8">
@@ -135,15 +150,6 @@ export default function CameraUpload({
                     behavior: "smooth",
                   });
               });
-            }}
-          />
-        ) : flow.state.capturedPhoto ? (
-          <PhotoPreview
-            photo={flow.state.capturedPhoto}
-            uploading={flow.state.uploading}
-            actions={{
-              onRetake: flow.actions.retakePhoto,
-              onUpload: handleUpload,
             }}
           />
         ) : null}
