@@ -50,8 +50,14 @@ export function useCamera({
 
         streamRef.current = stream;
 
-        if(videoRef.current){
+        if (videoRef.current) {
           videoRef.current.srcObject = stream;
+
+          await new Promise<void>((resolve) => {
+            videoRef.current!.onloadedmetadata = () => {
+              resolve();
+            };
+          });
 
           await videoRef.current.play();
 
@@ -165,12 +171,6 @@ export function useCamera({
       if(!ctx){
         return;
       }
-
-      console.log({
-        screen: `${window.innerWidth} x ${window.innerHeight}`,
-        videoWidth: video.videoWidth,
-        videoHeight: video.videoHeight,
-      });
 
       ctx.drawImage(
         video,

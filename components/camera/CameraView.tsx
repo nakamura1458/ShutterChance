@@ -14,7 +14,7 @@ export default function CameraView({ videoRef }: Props) {
         autoPlay
         playsInline
         muted
-        className="absolute inset-0 h-full w-full object-contain"
+        className="absolute inset-0 h-full w-full object-cover"
       />
     </div>
   );

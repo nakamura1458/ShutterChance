@@ -25,9 +25,7 @@ export default function FullscreenCamera({
   return (
     <div className="fixed inset-0 z-[100] bg-black">
 
-        <div className="fixed inset-0 bg-black">
-            <CameraView videoRef={videoRef} />
-        </div>
+        <CameraView videoRef={videoRef} />
 
         <CameraControls
             onClose={onClose}
