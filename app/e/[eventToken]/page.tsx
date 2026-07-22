@@ -1,8 +1,7 @@
 import { getEventByToken } from "@/services/event.service";
 import { getPhotos } from "@/services/photo.service";
 import CameraUpload from "@/components/camera/CameraUpload";
-import PhotoList from "@/components/camera/PhotoList";
-import ClientTest from "./ClientTest";
+import PhotoList from "@/components/gallery/PhotoList";
 
 type Props = {
   params: Promise<{

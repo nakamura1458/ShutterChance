@@ -3,13 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import CameraView from "@/components/camera/CameraView";
-import CaptureButton from "@/components/camera/CaptureButton";
 import NameInput from "@/components/camera/NameInput";
-import PhotoPreview from "@/components/camera/PhotoPreview";
 import UploadComplete from "@/components/camera/UploadComplete";
-import CameraSwitchButton from "@/components/camera/CameraSwitchButton";
-import CloseButton from "@/components/camera/CloseButton";
 import FullscreenPreview from "./FullscreenPreview";
 import FullscreenCamera from "./FullscreenCamera";
 import { useCameraFlow } from "@/hooks/useCameraFlow";

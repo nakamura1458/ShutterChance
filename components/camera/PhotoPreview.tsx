@@ -31,6 +31,7 @@ export default function PhotoPreview({
 
       <div className="flex gap-3 border-t border-white/10 bg-black/80 p-4 backdrop-blur">
         <Button
+          type="button"
           variant="secondary"
           className="flex-1 h-14"
           onClick={actions.onRetake}
@@ -40,6 +41,7 @@ export default function PhotoPreview({
         </Button>
 
         <Button
+          type="button"
           className="flex-1 h-14"
           onClick={actions.onUpload}
           disabled={uploading}
