@@ -37,16 +37,25 @@ export default function CameraUpload({
     enabled: started,
   });
 
+
   const handleUpload = async () => {
-    const success = await flow.actions.upload(guestName);
+    const success = await flow.actions.upload(
+      guestName
+    );
 
     if (!success) {
-      alert(flow.state.error?.message ?? "送信失敗");
+      alert(
+        flow.state.error?.message ??
+        "送信失敗"
+      );
+
       return;
     }
 
-    router.refresh();
+    // ここではrefreshしない
+    // success状態を維持するため
   };
+
 
   useEffect(() => {
     const isCameraOpen =
@@ -60,29 +69,74 @@ export default function CameraUpload({
       document.body.style.overflow = "";
     }
 
+
     return () => {
       document.body.style.overflow = "";
     };
+
   }, [
     started,
     flow.state.capturedPhoto,
     flow.state.status,
   ]);
 
+
+
   // ===========================
-  // 全画面カメラ
+  // Upload Complete
   // ===========================
   if (
     started &&
-    !flow.state.capturedPhoto &&
-    flow.state.status !== "success"
+    flow.state.status === "success"
+  ) {
+    return (
+      <UploadComplete
+        onRetake={async () => {
+          await flow.actions.retakePhoto();
+        }}
+
+        onViewPhotos={() => {
+          router.refresh();
+
+          requestAnimationFrame(() => {
+            document
+              .getElementById("photo-list")
+              ?.scrollIntoView({
+                behavior: "smooth",
+              });
+          });
+        }}
+      />
+    );
+  }
+
+
+
+  // ===========================
+  // Fullscreen Camera
+  // ===========================
+  if (
+    started &&
+    !flow.state.capturedPhoto
   ) {
     return (
       <FullscreenCamera
-        videoRef={flow.refs.videoRef}
-        canvasRef={flow.refs.canvasRef}
-        onCapture={flow.actions.takePhoto}
-        onSwitchCamera={flow.actions.switchCamera}
+        videoRef={
+          flow.refs.videoRef
+        }
+
+        canvasRef={
+          flow.refs.canvasRef
+        }
+
+        onCapture={
+          flow.actions.takePhoto
+        }
+
+        onSwitchCamera={
+          flow.actions.switchCamera
+        }
+
         onClose={async () => {
           await flow.actions.retakePhoto();
           setStarted(false);
@@ -91,23 +145,46 @@ export default function CameraUpload({
     );
   }
 
+
+
   // ===========================
-  // 全画面プレビュー
+  // Fullscreen Preview
   // ===========================
-  if (started && flow.state.capturedPhoto) {
+  if (
+    started &&
+    flow.state.capturedPhoto
+  ) {
     return (
       <FullscreenPreview
-        photo={flow.state.capturedPhoto}
-        uploading={flow.state.uploading}
-        onRetake={flow.actions.retakePhoto}
-        onUpload={handleUpload}
+        photo={
+          flow.state.capturedPhoto
+        }
+
+        uploading={
+          flow.state.uploading
+        }
+
+        onRetake={
+          flow.actions.retakePhoto
+        }
+
+        onUpload={
+          handleUpload
+        }
       />
     );
   }
 
+
+
+  // ===========================
+  // Initial
+  // ===========================
   return (
     <Card className="shadow-md border-0">
+
       <CardHeader className="pb-8">
+
         <CardTitle className="text-2xl">
           📷 写真を撮影
         </CardTitle>
@@ -115,42 +192,36 @@ export default function CameraUpload({
         <CardDescription className="text-base">
           思い出の一枚を撮影してアップロードしましょう
         </CardDescription>
+
       </CardHeader>
 
-      <CardContent>
-        {!started ? (
-          <div className="relative z-[9999]">
-            <NameInput
-              guestName={guestName}
-              onGuestNameChange={(value) => {
-                console.log("parent update:", value);
-                setGuestName(value);
-              }}
-              onStart={() => setStarted(true)}
-            />
-          </div>
-        ) : flow.state.status === "success" ? (
-          <UploadComplete
-            onRetake={async () => {
-              router.refresh();
-              await flow.actions.retakePhoto();
-            }}
-            onViewPhotos={() => {
-              router.refresh();
 
-              requestAnimationFrame(() => {
-                document
-                  .getElementById("photo-list")
-                  ?.scrollIntoView({
-                    behavior: "smooth",
-                  });
-              });
+      <CardContent>
+
+        <div className="relative z-[9999]">
+
+          <NameInput
+            guestName={guestName}
+
+            onGuestNameChange={(value) => {
+              setGuestName(value);
+            }}
+
+            onStart={() => {
+              setStarted(true);
             }}
           />
-        ) : null}
 
-        <canvas ref={flow.refs.canvasRef} hidden />
+        </div>
+
+
+        <canvas
+          ref={flow.refs.canvasRef}
+          hidden
+        />
+
       </CardContent>
+
     </Card>
   );
 }
