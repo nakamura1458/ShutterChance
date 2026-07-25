@@ -15,11 +15,7 @@ export default function NameInput({
   onStart,
 }: Props) {
 
-  console.log("NameInput guestName:", guestName);
-
   const isValid = guestName.trim().length > 0;
-  console.log(isValid);
-  console.log("★ NEW NameInput loaded ★");
 
   return (
     <div className="mx-auto flex max-w-sm flex-col gap-6">

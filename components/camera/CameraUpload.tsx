@@ -1,21 +1,17 @@
 "use client";
 
+// components
+import CameraScreen from "./CameraScreen";
+import CameraStartCard from "./start/CameraStartCard"
+
+// hooks
+import { useGuestName } from "@/hooks/useGuestName";
+import { useCameraFlow } from "@/hooks/useCameraFlow";
+
+// 装飾系のインポート
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import NameInput from "@/components/camera/NameInput";
-import UploadComplete from "@/components/camera/UploadComplete";
-import FullscreenPreview from "./FullscreenPreview";
-import FullscreenCamera from "./FullscreenCamera";
-import { useCameraFlow } from "@/hooks/useCameraFlow";
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 type Props = {
   eventId: string;
@@ -26,7 +22,6 @@ export default function CameraUpload({
   eventId,
   eventToken,
 }: Props) {
-  const [guestName, setGuestName] = useState("");
   const [started, setStarted] = useState(false);
 
   const router = useRouter();
@@ -39,9 +34,9 @@ export default function CameraUpload({
 
 
   const handleUpload = async () => {
-    const success = await flow.actions.upload(
-      guestName
-    );
+    const name = guestName.trim();
+
+    const success = await flow.actions.upload(name);
 
     if (!success) {
       alert(
@@ -52,10 +47,10 @@ export default function CameraUpload({
       return;
     }
 
-    // ここではrefreshしない
-    // success状態を維持するため
   };
 
+  const { guestName, saveGuestName, clearGuestName} = useGuestName(eventToken);
+  const [guestNameDraft, setGuestNameDraft] = useState("");
 
   useEffect(() => {
     const isCameraOpen =
@@ -80,21 +75,19 @@ export default function CameraUpload({
     flow.state.status,
   ]);
 
+  useEffect(() => {
+    setGuestNameDraft(guestName);
+  }, [guestName]);
 
-
-  // ===========================
-  // Upload Complete
-  // ===========================
-  if (
-    started &&
-    flow.state.status === "success"
-  ) {
+  if (started) {
     return (
-      <UploadComplete
-        onRetake={async () => {
+      <CameraScreen
+        flow={flow}
+        onUpload={handleUpload}
+        onClose={async () => {
           await flow.actions.retakePhoto();
+          setStarted(false);
         }}
-
         onViewPhotos={() => {
           router.refresh();
 
@@ -110,118 +103,24 @@ export default function CameraUpload({
     );
   }
 
-
-
-  // ===========================
-  // Fullscreen Camera
-  // ===========================
-  if (
-    started &&
-    !flow.state.capturedPhoto
-  ) {
-    return (
-      <FullscreenCamera
-        videoRef={
-          flow.refs.videoRef
-        }
-
-        canvasRef={
-          flow.refs.canvasRef
-        }
-
-        onCapture={
-          flow.actions.takePhoto
-        }
-
-        onSwitchCamera={
-          flow.actions.switchCamera
-        }
-
-        onClose={async () => {
-          await flow.actions.retakePhoto();
-          setStarted(false);
-        }}
-      />
-    );
-  }
-
-
-
-  // ===========================
-  // Fullscreen Preview
-  // ===========================
-  if (
-    started &&
-    flow.state.capturedPhoto
-  ) {
-    return (
-      <FullscreenPreview
-        photo={
-          flow.state.capturedPhoto
-        }
-
-        uploading={
-          flow.state.uploading
-        }
-
-        onRetake={
-          flow.actions.retakePhoto
-        }
-
-        onUpload={
-          handleUpload
-        }
-      />
-    );
-  }
-
-
-
   // ===========================
   // Initial
   // ===========================
   return (
-    <Card className="shadow-md border-0">
+    <>
+      <CameraStartCard
+        guestName={guestName}
+        guestNameDraft={guestNameDraft}
+        onGuestNameChange={setGuestNameDraft}
+        onSaveGuestName={saveGuestName}
+        onClearGuestName={clearGuestName}
+        onStart={() => setStarted(true)}
+      />
 
-      <CardHeader className="pb-8">
-
-        <CardTitle className="text-2xl">
-          📷 写真を撮影
-        </CardTitle>
-
-        <CardDescription className="text-base">
-          思い出の一枚を撮影してアップロードしましょう
-        </CardDescription>
-
-      </CardHeader>
-
-
-      <CardContent>
-
-        <div className="relative z-[9999]">
-
-          <NameInput
-            guestName={guestName}
-
-            onGuestNameChange={(value) => {
-              setGuestName(value);
-            }}
-
-            onStart={() => {
-              setStarted(true);
-            }}
-          />
-
-        </div>
-
-
-        <canvas
-          ref={flow.refs.canvasRef}
-          hidden
-        />
-
-      </CardContent>
-
-    </Card>
+      <canvas
+        ref={flow.refs.canvasRef}
+        hidden
+      />
+    </>
   );
 }
