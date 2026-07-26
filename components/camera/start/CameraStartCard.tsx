@@ -1,6 +1,7 @@
 "use client";
 
 import NameInput from "./NameInput";
+import ImagePickerButton from "../picker/ImagePickerButton";
 
 // 装飾系のインポート
 import { User, Pencil } from "lucide-react";
@@ -33,6 +34,7 @@ type Props = {
     onSaveGuestName: (name: string) => void;
     onClearGuestName: () => void;
     onStart: () => void;
+    onSelectPhoto: () => void;
 };
 
 export default function CameraStartCard({
@@ -42,6 +44,7 @@ export default function CameraStartCard({
     onSaveGuestName,
     onClearGuestName,
     onStart,
+    onSelectPhoto,
 }: Props) {
     const handleStart = () => {
         const name = guestNameDraft.trim();
@@ -128,6 +131,10 @@ export default function CameraStartCard({
                         >
                             📷 撮影を開始
                         </Button>
+
+                        <ImagePickerButton
+                            onClick={onSelectPhoto}
+                        />
                     </div>
                 ) : (
                     <NameInput

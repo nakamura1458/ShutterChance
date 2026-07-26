@@ -10,6 +10,7 @@ type Props = {
     onUpload: () => void;
     onClose: () => void;
     onViewPhotos: () => void;
+    onSelectPhoto: () => void;
 };
 
 export default function CameraScreen({
@@ -17,12 +18,14 @@ export default function CameraScreen({
     onUpload,
     onClose,
     onViewPhotos,
+    onSelectPhoto,
 }: Props) {
     if (flow.state.status === "success") {
         return (
             <UploadComplete
                 onRetake={flow.actions.retakePhoto}
                 onViewPhotos={onViewPhotos}
+                onSelectPhoto={onSelectPhoto}
             />
         );
     }

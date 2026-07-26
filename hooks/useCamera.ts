@@ -203,6 +203,20 @@ export function useCamera({
       capturedPhoto,
     ]);
 
+  const setPhoto = useCallback(
+    (file: File) => {
+      if (capturedPhoto) {
+        URL.revokeObjectURL(capturedPhoto.previewUrl);
+      }
+
+      setCapturedPhoto({
+        blob: file,
+        previewUrl: URL.createObjectURL(file),
+      });
+    },
+    [capturedPhoto]
+  );
+
   const retakePhoto =
     useCallback(async()=>{
       if(capturedPhoto){
@@ -233,6 +247,7 @@ export function useCamera({
       startCamera,
       stopCamera,
       takePhoto,
+      setPhoto,
       retakePhoto,
       switchCamera,
     },

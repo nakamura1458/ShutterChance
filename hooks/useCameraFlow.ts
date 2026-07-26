@@ -67,6 +67,7 @@ export function useCameraFlow({
 
     const actions = {
         takePhoto:      camera.actions.takePhoto,
+        setPhoto:       camera.actions.setPhoto,
         retakePhoto:    handleRetake,
         upload:         handleUpload,
         switchCamera:   camera.actions.switchCamera,

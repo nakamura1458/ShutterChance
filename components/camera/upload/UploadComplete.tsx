@@ -3,11 +3,13 @@
 type Props = {
   onRetake: () => void;
   onViewPhotos: () => void;
+  onSelectPhoto: () => void;
 };
 
 export default function UploadComplete({
   onRetake,
   onViewPhotos,
+  onSelectPhoto,
 }: Props) {
 
   return (
@@ -61,6 +63,17 @@ export default function UploadComplete({
           }}
         >
           📷 もう1枚撮る
+        </button>
+
+        <button
+          onClick={onSelectPhoto}
+          style={{
+            padding: "12px",
+            fontSize: "16px",
+            cursor: "pointer",
+          }}
+        >
+            🖼️ 写真をアップロード
         </button>
 
         <button

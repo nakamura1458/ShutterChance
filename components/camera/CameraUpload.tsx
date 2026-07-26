@@ -2,16 +2,16 @@
 
 // components
 import CameraScreen from "./CameraScreen";
-import CameraStartCard from "./start/CameraStartCard"
+import CameraStartCard from "./start/CameraStartCard";
+import ImagePicker from "./picker/ImagePicker";
 
 // hooks
 import { useGuestName } from "@/hooks/useGuestName";
 import { useCameraFlow } from "@/hooks/useCameraFlow";
 
-// 装飾系のインポート
-import { useEffect, useState } from "react";
+// 装飾系
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-
 
 type Props = {
   eventId: string;
@@ -32,25 +32,16 @@ export default function CameraUpload({
     enabled: started,
   });
 
+  const imagePickerRef = useRef<HTMLInputElement>(null);
 
-  const handleUpload = async () => {
-    const name = guestName.trim();
+  const { guestName, saveGuestName, clearGuestName } =
+    useGuestName(eventToken);
 
-    const success = await flow.actions.upload(name);
-
-    if (!success) {
-      alert(
-        flow.state.error?.message ??
-        "送信失敗"
-      );
-
-      return;
-    }
-
-  };
-
-  const { guestName, saveGuestName, clearGuestName} = useGuestName(eventToken);
   const [guestNameDraft, setGuestNameDraft] = useState("");
+
+  useEffect(() => {
+    setGuestNameDraft(guestName);
+  }, [guestName]);
 
   useEffect(() => {
     const isCameraOpen =
@@ -58,64 +49,76 @@ export default function CameraUpload({
       !flow.state.capturedPhoto &&
       flow.state.status !== "success";
 
-    if (isCameraOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-
+    document.body.style.overflow = isCameraOpen ? "hidden" : "";
 
     return () => {
       document.body.style.overflow = "";
     };
-
   }, [
     started,
     flow.state.capturedPhoto,
     flow.state.status,
   ]);
 
-  useEffect(() => {
-    setGuestNameDraft(guestName);
-  }, [guestName]);
+  const handleSelectPhoto = (file: File) => {
+    flow.actions.setPhoto(file);
+    setStarted(true);
+  };
 
-  if (started) {
-    return (
-      <CameraScreen
-        flow={flow}
-        onUpload={handleUpload}
-        onClose={async () => {
-          await flow.actions.retakePhoto();
-          setStarted(false);
-        }}
-        onViewPhotos={() => {
-          router.refresh();
+  const openPicker = () => {
+    imagePickerRef.current?.click();
+  };
 
-          requestAnimationFrame(() => {
-            document
-              .getElementById("photo-list")
-              ?.scrollIntoView({
-                behavior: "smooth",
-              });
-          });
-        }}
-      />
-    );
-  }
+  const handleUpload = async () => {
+    const name = guestName.trim();
 
-  // ===========================
-  // Initial
-  // ===========================
+    const success = await flow.actions.upload(name);
+
+    if (!success) {
+      alert(flow.state.error?.message ?? "送信失敗");
+    }
+  };
+
   return (
     <>
-      <CameraStartCard
-        guestName={guestName}
-        guestNameDraft={guestNameDraft}
-        onGuestNameChange={setGuestNameDraft}
-        onSaveGuestName={saveGuestName}
-        onClearGuestName={clearGuestName}
-        onStart={() => setStarted(true)}
+      {/* ← 常に存在させる */}
+      <ImagePicker
+        ref={imagePickerRef}
+        onSelect={handleSelectPhoto}
       />
+
+      {started ? (
+        <CameraScreen
+          flow={flow}
+          onUpload={handleUpload}
+          onClose={async () => {
+            await flow.actions.retakePhoto();
+            setStarted(false);
+          }}
+          onViewPhotos={() => {
+            router.refresh();
+
+            requestAnimationFrame(() => {
+              document
+                .getElementById("photo-list")
+                ?.scrollIntoView({
+                  behavior: "smooth",
+                });
+            });
+          }}
+          onSelectPhoto={openPicker}
+        />
+      ) : (
+        <CameraStartCard
+          guestName={guestName}
+          guestNameDraft={guestNameDraft}
+          onGuestNameChange={setGuestNameDraft}
+          onSaveGuestName={saveGuestName}
+          onClearGuestName={clearGuestName}
+          onStart={() => setStarted(true)}
+          onSelectPhoto={openPicker}
+        />
+      )}
 
       <canvas
         ref={flow.refs.canvasRef}
