@@ -11,21 +11,19 @@ import { usePhotoFlow } from "@/hooks/usePhotoFlow";
 
 // 装飾系
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
 
 type Props = {
   eventId: string;
   eventToken: string;
+  onUploadSuccess?: () => void;
 };
 
 export default function PhotoUpload({
   eventId,
   eventToken,
+  onUploadSuccess,
 }: Props) {
-  // const [started, setStarted] = useState(false);
   const [selected, setSelected] = useState(false);
-
-  const router = useRouter();
 
   const flow = usePhotoFlow({
     eventId,
@@ -59,7 +57,11 @@ export default function PhotoUpload({
 
     if (!success) {
       alert(flow.state.error?.message ?? "送信失敗");
+      return;
     }
+
+    onUploadSuccess?.();
+    // router.refresh();
   };
 
   return (
@@ -75,8 +77,6 @@ export default function PhotoUpload({
           flow={flow}
           onUpload={handleUpload}
           onViewPhotos={() => {
-            router.refresh();
-
             requestAnimationFrame(() => {
               document
                 .getElementById("photo-list")

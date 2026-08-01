@@ -1,7 +1,6 @@
 import { getEventByToken } from "@/services/event.service";
 import { getPhotos } from "@/services/photo.service";
-import PhotoUpload from "@/components/photo/PhotoUpload";
-import PhotoList from "@/components/gallery/PhotoList";
+import PhotoPageClient from "@/components/photo/PhotoPageClient";
 
 type Props = {
   params: Promise<{
@@ -44,14 +43,12 @@ export default async function EventPage({ params }: Props) {
           </p>
         </section>
 
-        {/* Camera */}
-        <PhotoUpload
+        <PhotoPageClient
           eventId={event.id}
           eventToken={event.event_token}
+          initialPhotos={photos}
         />
 
-        {/* Photos */}
-        <PhotoList photos={photos} />
       </div>
     </main>
   );
