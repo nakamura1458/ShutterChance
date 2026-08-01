@@ -1,6 +1,6 @@
 import { getEventByToken } from "@/services/event.service";
 import { getPhotos } from "@/services/photo.service";
-import CameraUpload from "@/components/camera/CameraUpload";
+import PhotoUpload from "@/components/photo/PhotoUpload";
 import PhotoList from "@/components/gallery/PhotoList";
 
 type Props = {
@@ -45,7 +45,7 @@ export default async function EventPage({ params }: Props) {
         </section>
 
         {/* Camera */}
-        <CameraUpload
+        <PhotoUpload
           eventId={event.id}
           eventToken={event.event_token}
         />

@@ -33,7 +33,6 @@ type Props = {
     onGuestNameChange: (value: string) => void;
     onSaveGuestName: (name: string) => void;
     onClearGuestName: () => void;
-    onStart: () => void;
     onSelectPhoto: () => void;
 };
 
@@ -43,7 +42,6 @@ export default function CameraStartCard({
     onGuestNameChange,
     onSaveGuestName,
     onClearGuestName,
-    onStart,
     onSelectPhoto,
 }: Props) {
     const handleStart = () => {
@@ -52,7 +50,7 @@ export default function CameraStartCard({
         if (!name) return;
 
         onSaveGuestName(name);
-        onStart();
+        onSelectPhoto();
     };
 
     const handleClear = () => {
@@ -64,7 +62,7 @@ export default function CameraStartCard({
         <Card className="shadow-md border-0">
             <CardHeader className="pb-8">
                 <CardTitle className="text-2xl">
-                📷 写真を撮影
+                📷 写真をアップロードする
                 </CardTitle>
 
                 <CardDescription className="text-base">
@@ -84,7 +82,7 @@ export default function CameraStartCard({
 
                                 <div className="text-left">
                                     <p className="text-xs text-muted-foreground">
-                                    撮影者
+                                    投稿者
                                     </p>
 
                                     <p className="font-semibold">
@@ -123,14 +121,6 @@ export default function CameraStartCard({
                                 </AlertDialogContent>
                             </AlertDialog>
                         </div>
-
-                        <Button
-                            size="lg"
-                            className="w-full"
-                            onClick={onStart}
-                        >
-                            📷 撮影を開始
-                        </Button>
 
                         <ImagePickerButton
                             onClick={onSelectPhoto}

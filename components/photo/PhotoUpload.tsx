@@ -1,13 +1,13 @@
 "use client";
 
 // components
-import CameraScreen from "./CameraScreen";
-import CameraStartCard from "./start/CameraStartCard";
+import PhotoScreen from "./PhotoScreen";
+import UploadStartCard from "./start/UploadStartCard";
 import ImagePicker from "./picker/ImagePicker";
 
 // hooks
 import { useGuestName } from "@/hooks/useGuestName";
-import { useCameraFlow } from "@/hooks/useCameraFlow";
+import { usePhotoFlow } from "@/hooks/usePhotoFlow";
 
 // 装飾系
 import { useEffect, useState, useRef } from "react";
@@ -18,18 +18,18 @@ type Props = {
   eventToken: string;
 };
 
-export default function CameraUpload({
+export default function PhotoUpload({
   eventId,
   eventToken,
 }: Props) {
-  const [started, setStarted] = useState(false);
+  // const [started, setStarted] = useState(false);
+  const [selected, setSelected] = useState(false);
 
   const router = useRouter();
 
-  const flow = useCameraFlow({
+  const flow = usePhotoFlow({
     eventId,
     eventToken,
-    enabled: started,
   });
 
   const imagePickerRef = useRef<HTMLInputElement>(null);
@@ -43,27 +43,10 @@ export default function CameraUpload({
     setGuestNameDraft(guestName);
   }, [guestName]);
 
-  useEffect(() => {
-    const isCameraOpen =
-      started &&
-      !flow.state.capturedPhoto &&
-      flow.state.status !== "success";
-
-    document.body.style.overflow = isCameraOpen ? "hidden" : "";
-
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [
-    started,
-    flow.state.capturedPhoto,
-    flow.state.status,
-  ]);
-
   const handleSelectPhoto = (file: File) => {
     flow.actions.setPhoto(file);
-    setStarted(true);
-  };
+    setSelected(true);
+};
 
   const openPicker = () => {
     imagePickerRef.current?.click();
@@ -87,14 +70,10 @@ export default function CameraUpload({
         onSelect={handleSelectPhoto}
       />
 
-      {started ? (
-        <CameraScreen
+      {selected ? (
+        <PhotoScreen
           flow={flow}
           onUpload={handleUpload}
-          onClose={async () => {
-            await flow.actions.retakePhoto();
-            setStarted(false);
-          }}
           onViewPhotos={() => {
             router.refresh();
 
@@ -109,21 +88,15 @@ export default function CameraUpload({
           onSelectPhoto={openPicker}
         />
       ) : (
-        <CameraStartCard
+        <UploadStartCard
           guestName={guestName}
           guestNameDraft={guestNameDraft}
           onGuestNameChange={setGuestNameDraft}
           onSaveGuestName={saveGuestName}
           onClearGuestName={clearGuestName}
-          onStart={() => setStarted(true)}
           onSelectPhoto={openPicker}
         />
       )}
-
-      <canvas
-        ref={flow.refs.canvasRef}
-        hidden
-      />
     </>
   );
 }
