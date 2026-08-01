@@ -1,31 +1,33 @@
 "use client";
 
 import PhotoPreview from "./PhotoPreview";
-import type { CapturedPhoto } from "@/types/camera";
 
 type Props = {
-  photo: CapturedPhoto;
+  photos: File[];
   uploading: boolean;
-  onRetake: () => void;
+  onClear: () => void;
+  onAddPhoto: () => void;
   onUpload: () => void;
 };
 
 export default function FullscreenPreview({
-  photo,
+  photos,
   uploading,
-  onRetake,
+  onClear,
   onUpload,
+  onAddPhoto,
 }: Props) {
   return (
     <div className="fixed inset-0 z-[200] h-dvh w-screen overflow-hidden bg-black">
-        <PhotoPreview
-            photo={photo}
-            uploading={uploading}
-            actions={{
-            onRetake,
-            onUpload,
-            }}
-        />
+      <PhotoPreview
+        photos={photos}
+        uploading={uploading}
+        actions={{
+          onClear,
+          onUpload,
+          onAddPhoto,
+        }}
+      />
     </div>
   );
 }

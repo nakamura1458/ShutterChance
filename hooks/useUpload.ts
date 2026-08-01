@@ -2,7 +2,6 @@
 
 import { useCallback, useState } from "react";
 import { uploadPhoto } from "@/services/photo-upload.service";
-import type { CapturedPhoto } from "@/types/camera";
 
 type UseUploadProps = {
   eventId: string;
@@ -11,7 +10,7 @@ type UseUploadProps = {
 
 type UploadParams = {
   guestName: string;
-  capturedPhoto: CapturedPhoto | null;
+  photos: File[];
 };
 
 export function useUpload({
@@ -24,26 +23,40 @@ export function useUpload({
     null
   );
 
+
   const upload = useCallback(
     async ({
       guestName,
-      capturedPhoto,
+      photos,
     }: UploadParams) => {
-      if (!capturedPhoto) return false;
+
+      if (!photos || photos.length === 0) {
+        return false;
+      }
+
 
       setLoading(true);
       setError(null);
 
+
       try {
-        await uploadPhoto(
-          eventId,
-          eventToken,
-          guestName,
-          capturedPhoto.blob
+
+        await Promise.all(
+          photos.map((file) =>
+            uploadPhoto(
+              eventId,
+              eventToken,
+              guestName,
+              file
+            )
+          )
         );
 
+
         return true;
+
       } catch (err) {
+
         const uploadError =
           err instanceof Error
             ? err
@@ -54,12 +67,17 @@ export function useUpload({
         setError(uploadError);
 
         return false;
+
       } finally {
+
         setLoading(false);
+
       }
+
     },
     [eventId, eventToken]
   );
+
 
   return {
     state: {

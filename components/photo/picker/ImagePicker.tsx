@@ -3,30 +3,33 @@
 import { forwardRef } from "react";
 
 type Props = {
-    onSelect: (file: File) => void;
+  onSelect: (files: File[]) => void;
 };
 
 const ImagePicker = forwardRef<HTMLInputElement, Props>(
-    ({ onSelect }, ref) => {
-        return (
-            <input
-                ref={ref}
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={(e) => {
-                    const file = e.target.files?.[0];
+  ({ onSelect }, ref) => {
+    return (
+      <input
+        ref={ref}
+        type="file"
+        accept="image/*"
+        multiple
+        hidden
+        onChange={(e) => {
+          const files = Array.from(
+            e.target.files ?? []
+          );
 
-                    if (!file) return;
+          if (files.length === 0) return;
 
-                    onSelect(file);
+          onSelect(files);
 
-                    // 同じ画像を連続で選べるようにする
-                    e.target.value = "";
-                }}
-            />
-        );
-    }
+          // 同じ画像を連続で選べるようにする
+          e.target.value = "";
+        }}
+      />
+    );
+  }
 );
 
 ImagePicker.displayName = "ImagePicker";

@@ -25,12 +25,15 @@ export function usePhotoFlow({
     "idle" | "uploading" | "success" | "error"
   >("idle");
 
-  async function handleUpload(guestName = "ゲスト") {
+
+  async function handleUpload(
+    guestName = "ゲスト"
+  ) {
     setStatus("uploading");
 
     const success = await upload.actions.upload({
       guestName,
-      capturedPhoto: photo.state.capturedPhoto,
+      photos: photo.state.photos,
     });
 
     if (!success) {
@@ -42,10 +45,12 @@ export function usePhotoFlow({
     return true;
   }
 
-  function clearPhoto() {
-    photo.actions.clearPhoto();
+
+  function clearPhotos() {
+    photo.actions.clearPhotos();
     setStatus("idle");
   }
+
 
   return {
     state: {
@@ -56,8 +61,16 @@ export function usePhotoFlow({
     },
 
     actions: {
-      setPhoto: photo.actions.setPhoto,
-      clearPhoto,
+      // 初回選択
+      setPhotos: photo.actions.setPhotos,
+
+      // 追加選択
+      addPhotos: photo.actions.addPhotos,
+
+      // クリア
+      clearPhotos,
+
+      // upload
       upload: handleUpload,
     },
   };

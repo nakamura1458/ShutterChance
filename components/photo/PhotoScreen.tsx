@@ -11,32 +11,37 @@ type Props = {
   onSelectPhoto: () => void;
 };
 
-export default function CameraScreen({
+export default function PhotoScreen({
   flow,
   onUpload,
   onViewPhotos,
   onSelectPhoto,
 }: Props) {
+
+  console.log("PhotoScreen photos:", flow.state.photos);
+
   if (flow.state.status === "success") {
     return (
       <UploadComplete
-        onRetake={flow.actions.clearPhoto}
+        onRetake={flow.actions.clearPhotos}
         onViewPhotos={onViewPhotos}
         onSelectPhoto={onSelectPhoto}
       />
     );
   }
 
-  if (!flow.state.capturedPhoto) {
+
+  if (!flow.state.photos.length) {
     return null;
   }
 
   return (
     <FullscreenPreview
-      photo={flow.state.capturedPhoto}
+      photos={flow.state.photos}
       uploading={flow.state.uploading}
-      onRetake={flow.actions.clearPhoto}
+      onClear={flow.actions.clearPhotos}
       onUpload={onUpload}
+      onAddPhoto={onSelectPhoto}
     />
   );
 }

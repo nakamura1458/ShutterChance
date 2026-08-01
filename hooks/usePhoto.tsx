@@ -1,45 +1,42 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import type { CapturedPhoto } from "@/types/camera";
 
 export function usePhoto() {
-  const [capturedPhoto, setCapturedPhoto] =
-    useState<CapturedPhoto | null>(null);
+  const [photos, setPhotosState] = useState<File[]>([]);
 
-  const setPhoto = useCallback(
-    (file: File) => {
-      setCapturedPhoto((prev) => {
-        if (prev) {
-          URL.revokeObjectURL(prev.previewUrl);
-        }
-
-        return {
-          blob: file,
-          previewUrl: URL.createObjectURL(file),
-        };
-      });
+  // 初回選択
+  const setPhotos = useCallback(
+    (files: File[]) => {
+      setPhotosState(files);
     },
     []
   );
 
-  const clearPhoto = useCallback(() => {
-    setCapturedPhoto((prev) => {
-      if (prev) {
-        URL.revokeObjectURL(prev.previewUrl);
-      }
-      return null;
-    });
+  // 追加選択
+  const addPhotos = useCallback(
+    (files: File[]) => {
+      setPhotosState((prev) => [
+        ...prev,
+        ...files,
+      ]);
+    },
+    []
+  );
+
+  const clearPhotos = useCallback(() => {
+    setPhotosState([]);
   }, []);
 
   return {
     state: {
-      capturedPhoto,
+      photos,
     },
 
     actions: {
-      setPhoto,
-      clearPhoto,
+      setPhotos,
+      addPhotos,
+      clearPhotos,
     },
   };
 }

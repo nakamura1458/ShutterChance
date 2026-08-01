@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  Share,
   X,
 } from "lucide-react";
 import type { PhotoListItem } from "@/types/photo";
@@ -63,6 +64,52 @@ export default function FullscreenPhotoViewer({
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleSavePhoto = async () => {
+    try {
+      const response = await fetch(photo.image_url);
+      const blob = await response.blob();
+
+      const file = new File(
+        [blob],
+        `${photo.guest_name || "photo"}.jpg`,
+        {
+          type: blob.type,
+        }
+      );
+
+      if (
+        navigator.canShare &&
+        navigator.canShare({
+          files: [file],
+        })
+      ) {
+        await navigator.share({
+          files: [file],
+          title: "写真を保存",
+        });
+
+        return;
+      }
+
+      // fallback
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+
+      a.href = url;
+      a.download = `${photo.guest_name || "photo"}.jpg`;
+
+      a.click();
+
+      URL.revokeObjectURL(url);
+
+    } catch (err) {
+      console.error(
+        "photo save failed",
+        err
+      );
     }
   };
 
@@ -125,10 +172,13 @@ export default function FullscreenPhotoViewer({
           </div>
 
           <button
-            onClick={handleDownload}
+            onClick={handleSavePhoto}
             className="rounded-full p-2 text-white hover:bg-white/10 transition"
-          >
-            <Download size={22} />
+          >        
+            <Share size={20}/>
+              <span className="text-sm">
+                保存
+              </span>
           </button>
         </header>
 

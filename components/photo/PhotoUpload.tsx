@@ -37,16 +37,33 @@ export default function PhotoUpload({
 
   const [guestNameDraft, setGuestNameDraft] = useState("");
 
+  const [adding, setAdding] = useState(false);
+
   useEffect(() => {
     setGuestNameDraft(guestName);
   }, [guestName]);
 
-  const handleSelectPhoto = (file: File) => {
-    flow.actions.setPhoto(file);
+  const handleSelectPhoto = (files: File[]) => {
+    if (adding) {
+      flow.actions.addPhotos(files);
+      setAdding(false);
+      return;
+    }
+
+    flow.actions.setPhotos(files);
     setSelected(true);
-};
+  };
+
+  const handleAddPhoto = (files: File[]) => {
+    flow.actions.addPhotos(files);
+  };
 
   const openPicker = () => {
+    imagePickerRef.current?.click();
+  };
+
+  const openAddPicker = () => {
+    setAdding(true);
     imagePickerRef.current?.click();
   };
 
@@ -61,7 +78,6 @@ export default function PhotoUpload({
     }
 
     onUploadSuccess?.();
-    // router.refresh();
   };
 
   return (
@@ -85,7 +101,7 @@ export default function PhotoUpload({
                 });
             });
           }}
-          onSelectPhoto={openPicker}
+          onSelectPhoto={openAddPicker}
         />
       ) : (
         <UploadStartCard
