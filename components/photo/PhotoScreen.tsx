@@ -23,7 +23,7 @@ export default function PhotoScreen({
   if (flow.state.status === "success") {
     return (
       <UploadComplete
-        onRetake={flow.actions.clearPhotos}
+        photos={flow.state.photos}
         onViewPhotos={onViewPhotos}
         onSelectPhoto={onSelectPhoto}
       />
