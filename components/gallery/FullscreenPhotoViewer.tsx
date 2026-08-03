@@ -9,6 +9,7 @@ import {
   X,
 } from "lucide-react";
 import type { PhotoListItem } from "@/types/photo";
+import { downloadPhoto } from "@/lib/utils/downloadPhoto";
 
 type Props = {
   photos: PhotoListItem[];
@@ -49,24 +50,6 @@ export default function FullscreenPhotoViewer({
     };
   }, [onPrevious, onNext, onClose]);
 
-  const handleDownload = async () => {
-    try {
-      const response = await fetch(photo.image_url);
-      const blob = await response.blob();
-
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${photo.guest_name || "photo"}.jpg`;
-      a.click();
-
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   const handleSavePhoto = async () => {
     try {
       const response = await fetch(photo.image_url);
@@ -94,16 +77,7 @@ export default function FullscreenPhotoViewer({
         return;
       }
 
-      // fallback
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-
-      a.href = url;
-      a.download = `${photo.guest_name || "photo"}.jpg`;
-
-      a.click();
-
-      URL.revokeObjectURL(url);
+      await downloadPhoto(photo);
 
     } catch (err) {
       console.error(

@@ -1,9 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import {
+  CheckSquare,
+  X,
+} from "lucide-react";
 import PhotoCard from "./PhotoCard";
 import FullscreenPhotoViewer from "./FullscreenPhotoViewer";
 import type { PhotoListItem } from "@/types/photo";
+import { downloadPhoto } from "@/lib/utils/downloadPhoto";
 
 type Props = {
   photos: PhotoListItem[];
@@ -12,19 +17,119 @@ type Props = {
 export default function PhotoList({ photos }: Props) {
   const [currentIndex, setCurrentIndex] = useState<number | null>(null);
 
+  const [selectionMode, setSelectionMode] = useState(false);
+
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const toggleSelection = (photoId: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(photoId)
+        ? prev.filter((id) => id !== photoId)
+        : [...prev, photoId]
+    );
+  };
+
   return (
     <section
       id="photo-list"
-      className="space-y-4"
+      className={`
+        space-y-4
+        ${selectionMode ? "pb-24" : ""}
+      `}
     >
       <div className="flex items-center justify-between px-1">
-        <h2 className="text-xl font-bold">
-          📸 Gallery
-        </h2>
 
-        <p className="text-sm text-muted-foreground">
-          {photos.length} Photos
-        </p>
+        {selectionMode ? (
+          <>
+            {/* 選択モード */}
+
+            <button
+              onClick={() => {
+                setSelectedIds([]);
+                setSelectionMode(false);
+              }}
+              className="
+                text-sm
+                font-medium
+                text-muted-foreground
+              "
+            >
+              キャンセル
+            </button>
+
+
+            <p
+              className="
+                text-sm
+                font-semibold
+              "
+            >
+              {selectedIds.length}枚選択中
+            </p>
+
+
+            <button
+              onClick={() => {
+                setSelectedIds(
+                  photos.map(
+                    (photo) => photo.id
+                  )
+                );
+              }}
+              className="
+                text-sm
+                font-medium
+                text-blue-600
+              "
+            >
+              すべて選択
+            </button>
+
+          </>
+        ) : (
+
+          <>
+            {/* 通常モード */}
+
+            <h2 className="text-xl font-bold">
+              📸 Gallery
+            </h2>
+
+
+            <div className="flex items-center gap-4">
+
+              <p
+                className="
+                  text-sm
+                  text-muted-foreground
+                "
+              >
+                {photos.length} Photos
+              </p>
+
+
+              <button
+                onClick={() => {
+                  setSelectionMode(true);
+                }}
+                className="
+                  flex
+                  items-center
+                  gap-1
+                  text-sm
+                  font-medium
+                  text-blue-600
+                "
+              >
+                <CheckSquare size={16} />
+                選択
+              </button>
+
+            </div>
+
+          </>
+        )}
+
       </div>
 
       {photos.length === 0 ? (
@@ -44,7 +149,15 @@ export default function PhotoList({ photos }: Props) {
             <PhotoCard
               key={photo.id}
               photo={photo}
-              onClick={() => setCurrentIndex(index)}
+              selectionMode={selectionMode}
+              selected={selectedIds.includes(photo.id)}
+              onClick={() => {
+                if (selectionMode) {
+                  toggleSelection(photo.id);
+                } else {
+                  setCurrentIndex(index);
+                }
+              }}
             />
           ))}
         </div>
@@ -68,6 +181,79 @@ export default function PhotoList({ photos }: Props) {
           }
           onClose={() => setCurrentIndex(null)}
         />
+      )}
+
+      {selectionMode && (
+        <div
+          className="
+            fixed
+            bottom-0
+            left-0
+            right-0
+            z-50
+            px-4
+            pb-[env(safe-area-inset-bottom)]
+            animate-in
+            slide-in-from-bottom
+          "
+        >
+          <div
+            className="
+              mx-auto
+              flex
+              max-w-lg
+              items-center
+              justify-between
+              rounded-2xl
+              border
+              bg-background/95
+              backdrop-blur
+              px-5
+              py-3
+              shadow-xl
+            "
+          >
+            <div>
+              <p className="text-sm font-semibold">
+                {selectedIds.length}枚選択中
+              </p>
+
+              <p className="text-xs text-muted-foreground">
+                写真を保存します
+              </p>
+            </div>
+
+            <button
+              disabled={selectedIds.length === 0}
+              className="
+                rounded-full
+                bg-blue-600
+                px-5
+                py-2.5
+                text-sm
+                font-semibold
+                text-white
+                shadow-md
+                transition
+                active:scale-95
+                disabled:cursor-not-allowed
+                disabled:opacity-50
+              "
+              onClick={async () => {
+                const selectedPhotos = photos.filter(
+                  (photo) =>
+                    selectedIds.includes(photo.id)
+                );
+
+                for (const photo of selectedPhotos) {
+                  await downloadPhoto(photo);
+                }
+              }}
+            >
+              ダウンロード
+            </button>
+          </div>
+        </div>
       )}
     </section>
   );

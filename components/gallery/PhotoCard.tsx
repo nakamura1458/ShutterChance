@@ -1,16 +1,19 @@
 "use client";
 
 import type { PhotoListItem } from "@/types/photo";
-import { X } from "lucide-react";
 
 type Props = {
     photo: PhotoListItem;
     onClick: () => void;
+    selectionMode?: boolean;
+    selected?: boolean;
 };
 
 export default function PhotoCard({
     photo,
     onClick,
+    selectionMode = false,
+    selected = false,
 }: Props) {
 
     return (
@@ -32,32 +35,80 @@ export default function PhotoCard({
             <img
                 src={photo.image_url}
                 alt="uploaded photo"
-                className="
+                className={`
                     h-full
                     w-full
                     object-cover
-                    transition
+                    transition-all
                     duration-300
-                    group-hover:scale-110
-                "
+                    ${
+                    selected
+                        ? "scale-95"
+                        : "group-hover:scale-110"
+                    }
+                `}
             />
+
+            {selectionMode && (
+                <div
+                    className={`
+                    absolute
+                    top-2
+                    left-2
+                    z-20
+                    flex
+                    h-8
+                    w-8
+                    items-center
+                    justify-center
+                    rounded-full
+                    border-2
+                    text-sm
+                    font-bold
+                    transition-all
+                    duration-200
+
+                    ${
+                        selected
+                        ? `
+                            scale-110
+                            border-blue-600
+                            bg-blue-600
+                            text-white
+                        `
+                        : `
+                            border-white
+                            bg-black/30
+                            text-transparent
+                        `
+                    }
+                    `}
+                >
+                    ✓
+                </div>
+                )}
+
+            {selectionMode && selected && (
+                <div className="absolute inset-0 bg-black/30 z-10" />
+            )}
 
 
             {/* hover overlay */}
 
             <div
-                className="
+                className={`
                     absolute
                     inset-0
                     flex
                     items-end
-                    bg-black/0
                     p-2
-                    opacity-0
                     transition
-                    group-hover:bg-black/30
-                    group-hover:opacity-100
-                "
+                    ${
+                    selectionMode
+                        ? "bg-transparent opacity-100"
+                        : "bg-black/0 opacity-0 group-hover:bg-black/30 group-hover:opacity-100"
+                    }
+                `}
             >
 
                 <p
