@@ -12,13 +12,13 @@ import {
 type Props = {
   photos: File[];
   onViewPhotos: () => void;
-  onSelectPhoto: () => void;
+  onRetryUpload: () => void;
 };
 
 export default function UploadComplete({
   photos,
   onViewPhotos,
-  onSelectPhoto,
+  onRetryUpload
 }: Props) {
 
   // 🎉 完了演出
@@ -296,7 +296,7 @@ export default function UploadComplete({
 
 
           <button
-            onClick={onSelectPhoto}
+            onClick={onRetryUpload}
             className="
               flex
               items-center

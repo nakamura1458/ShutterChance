@@ -51,6 +51,13 @@ export function usePhotoFlow({
     setStatus("idle");
   }
 
+  function resetStatus() {
+    setStatus("idle");
+  }
+
+  function clearSelectedPhotos() {
+    photo.actions.clearPhotos();
+  }
 
   return {
     state: {
@@ -69,6 +76,11 @@ export function usePhotoFlow({
 
       // クリア
       clearPhotos,
+
+      clearSelectedPhotos,
+
+      // アップロード状態リセット
+      resetStatus,
 
       // upload
       upload: handleUpload,

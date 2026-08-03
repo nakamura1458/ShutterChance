@@ -7,6 +7,7 @@ import { usePhotoFlow } from "@/hooks/usePhotoFlow";
 type Props = {
   flow: ReturnType<typeof usePhotoFlow>;
   onUpload: () => void;
+  uploadedPhotos: File[];
   onViewPhotos: () => void;
   onSelectPhoto: () => void;
 };
@@ -14,18 +15,17 @@ type Props = {
 export default function PhotoScreen({
   flow,
   onUpload,
+  uploadedPhotos,
   onViewPhotos,
   onSelectPhoto,
 }: Props) {
 
-  console.log("PhotoScreen photos:", flow.state.photos);
-
   if (flow.state.status === "success") {
     return (
       <UploadComplete
-        photos={flow.state.photos}
+        photos={uploadedPhotos}
         onViewPhotos={onViewPhotos}
-        onSelectPhoto={onSelectPhoto}
+        onRetryUpload={onSelectPhoto}
       />
     );
   }

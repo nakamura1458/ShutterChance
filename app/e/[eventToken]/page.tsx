@@ -2,6 +2,8 @@ import { getEventByToken } from "@/services/event.service";
 import { getPhotos } from "@/services/photo.service";
 import PhotoPageClient from "@/components/photo/PhotoPageClient";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   params: Promise<{
     eventToken: string;

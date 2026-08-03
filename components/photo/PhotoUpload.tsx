@@ -37,24 +37,19 @@ export default function PhotoUpload({
 
   const [guestNameDraft, setGuestNameDraft] = useState("");
 
-  const [adding, setAdding] = useState(false);
+  const [uploadedPhotos, setUploadedPhotos] = useState<File[]>([]);
 
   useEffect(() => {
     setGuestNameDraft(guestName);
   }, [guestName]);
 
   const handleSelectPhoto = (files: File[]) => {
-    if (adding) {
-      flow.actions.addPhotos(files);
-      setAdding(false);
+    if (!selected) {
+      flow.actions.setPhotos(files);
+      setSelected(true);
       return;
     }
 
-    flow.actions.setPhotos(files);
-    setSelected(true);
-  };
-
-  const handleAddPhoto = (files: File[]) => {
     flow.actions.addPhotos(files);
   };
 
@@ -63,11 +58,12 @@ export default function PhotoUpload({
   };
 
   const openAddPicker = () => {
-    setAdding(true);
+    flow.actions.resetStatus();
     imagePickerRef.current?.click();
   };
 
   const handleUpload = async () => {
+
     const name = guestName.trim();
 
     const success = await flow.actions.upload(name);
@@ -76,6 +72,10 @@ export default function PhotoUpload({
       alert(flow.state.error?.message ?? "送信失敗");
       return;
     }
+
+    setUploadedPhotos(flow.state.photos);
+
+    flow.actions.clearSelectedPhotos();
 
     onUploadSuccess?.();
   };
@@ -91,6 +91,7 @@ export default function PhotoUpload({
       {selected ? (
         <PhotoScreen
           flow={flow}
+          uploadedPhotos={uploadedPhotos}
           onUpload={handleUpload}
           onViewPhotos={() => {
             requestAnimationFrame(() => {
