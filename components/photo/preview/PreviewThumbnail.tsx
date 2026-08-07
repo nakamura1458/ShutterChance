@@ -80,8 +80,8 @@ export default function PreviewThumbnail({
               aria-label={`写真 ${index + 1} を削除`}
               className="
                 absolute
-                -right-1
-                -top-1
+                right-1
+                top-1
                 flex
                 h-5
                 w-5
