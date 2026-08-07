@@ -1,14 +1,21 @@
 "use client";
 
 import {
-  X,
-  ChevronLeft,
-  ChevronRight,
-  Download,
+    X,
+    ChevronLeft,
+    ChevronRight,
+    Download,
 } from "lucide-react";
+
 import { motion } from "framer-motion";
-import { useGesture } from "@use-gesture/react";
+import { useSwipeable } from "react-swipeable";
 import { useState } from "react";
+
+import {
+    TransformWrapper,
+    TransformComponent,
+} from "react-zoom-pan-pinch";
+
 
 type Props = {
     photos: string[];
@@ -26,63 +33,99 @@ export default function FullscreenPreview({
     onPrevious,
 }: Props) {
 
-    const [scale,setScale] = useState(1);
+    const [zoomed, setZoomed] = useState(false);
+    const handleDownload = async () => {
 
-    const resetZoom = () => {
-        setScale(1);
-    };
+        try {
+            const url = photos[selectedIndex];
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const file =
+                new File(
+                    [blob],
+                    `photo-${selectedIndex + 1}.jpg`,
+                    {
+                        type: blob.type,
+                    }
+                );
 
-    const handleNext = () => {
-        resetZoom();
-        onNext();
-    };
+            // iPhone Safari
+            if (
+                navigator.canShare &&
+                navigator.canShare({
+                    files: [file],
+                })
+            ) {
+                await navigator.share({
+                    files: [file],
+                    title: "写真を保存",
+                });
+                return;
+            }
 
+            // PC / Android
+            const downloadUrl = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = downloadUrl;
+            link.download = `photo-${selectedIndex + 1}.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(downloadUrl);
 
-    const handlePrevious = () => {
-        resetZoom();
-        onPrevious();
-    };
-
-    const bind = useGesture({
-
-        onPinch:({
-            offset:[distance = 200],
-        })=>{
-
-            const nextScale =
-            Math.min(
-                Math.max(distance / 200,1),
-                3
+        } catch(error){
+            console.error(
+                "download failed",
+                error
             );
+        }
+    };
 
-            setScale(nextScale);
-
+    const swipeHandlers = useSwipeable({
+        onSwipedLeft: () => {
+            if (!zoomed) {
+                onNext();
+            }
         },
 
+        onSwipedRight: () => {
+            if (!zoomed) {
+                onPrevious();
+            }
+        },
+
+        preventScrollOnSwipe: true,
+        trackMouse: true,
     });
 
+
     return (
+
         <motion.div
             initial={{
-                opacity: 0,
+                opacity:0,
             }}
+
             animate={{
-                opacity: 1,
+                opacity:1,
             }}
+
             exit={{
-                opacity: 0,
+                opacity:0,
             }}
+
             className="
                 fixed
                 inset-0
                 z-[300]
                 flex
                 flex-col
-                bg-black
                 overflow-hidden
+                bg-black
                 touch-none
             "
         >
+
 
             {/* Header */}
             <div
@@ -104,7 +147,6 @@ export default function FullscreenPreview({
                         bg-white/10
                         p-2
                         backdrop-blur
-                        transition
                         active:scale-95
                     "
                 >
@@ -124,92 +166,123 @@ export default function FullscreenPreview({
                     {photos.length}
                 </div>
 
-
-            </div>
-
-
-
-            {/* Photo Area */}
-            <div
-                className="
-                    flex
-                    flex-1
-                    items-center
-                    justify-center
-                    overflow-hidden
-                    px-4
-                    touch-none
-                "
-            >
-
-                <motion.img
-                    {...bind()}
-                    key={selectedIndex}
-                    src={photos[selectedIndex]}
-
-                    drag={scale > 1 ? true : "x"}
-
-                    dragConstraints={{
-                        left:-300,
-                        right:300,
-                        top:-300,
-                        bottom:300,
-                    }}
-
-                    dragElastic={0.8}
-
-                    onDragEnd={(event, info)=>{
-
-                        // 拡大中は写真移動のみ
-                        if(scale > 1){
-                            return;
-                        }
-
-                        if(info.offset.x < -50){
-                            handleNext();
-                        }
-
-                        if(info.offset.x > 50){
-                            handlePrevious();
-                        }
-
-                    }}
-
-                    onDoubleClick={()=>{
-                        if(scale > 1){
-                            resetZoom();
-                        }else{
-                            setScale(2);
-                        }
-                    }}
-
-                    initial={{
-                        opacity:0,
-                        x:40,
-                        scale:0.96,
-                    }}
-
-                    animate={{
-                        opacity:1,
-                        scale,
-                    }}
-
-                    transition={{
-                        type:"spring",
-                        stiffness:250,
-                        damping:25,
-                    }}
-
+                {/* Download */}
+                <button
+                    onClick={handleDownload}
                     className="
-                        max-h-full
-                        max-w-full
-                        rounded-xl
-                        object-contain
+                        rounded-full
+                        bg-white/10
+                        p-2
+                        backdrop-blur
+                        active:scale-95
                     "
-                />
+                >
+                    <Download size={24}/>
+
+                </button>
 
             </div>
 
+
+            {/* Photo */}
+            {/* <div
+                {...swipeHandlers}
+                className="
+                flex
+                flex-1
+                items-center
+                justify-center
+                overflow-hidden
+                px-4
+                touch-none
+                "
+            > */}
+                <TransformWrapper
+                    key={selectedIndex}
+                    initialScale={1}
+                    onTransformed={(ref) => {
+                        setZoomed(
+                            ref.state.scale > 1
+                        );
+                    }}
+                    minScale={1}
+                    maxScale={4}
+
+                    doubleClick={{
+                        mode:"toggle",
+                        step:2,
+                    }}
+
+                    pinch={{
+                        step:5,
+                    }}
+
+                    panning={{
+                        disabled:false,
+                    }}
+
+                    wheel={{
+                        disabled:true,
+                    }}
+
+                    centerOnInit
+                >
+                    <div
+                        {...swipeHandlers}
+                        className="
+                        flex
+                        flex-1
+                        items-center
+                        justify-center
+                        overflow-hidden
+                        px-4
+                        touch-none
+                        "
+                    >
+
+                        <TransformComponent
+                            wrapperClass="
+                            flex
+                            h-full
+                            w-full
+                            items-center
+                            justify-center
+                            "
+                        >
+
+                            <motion.img
+                                src={
+                                    photos[selectedIndex]
+                                }
+
+                                initial={{
+                                    opacity:0,
+                                    scale:0.96,
+                                }}
+
+                                animate={{
+                                    opacity:1,
+                                    scale:1,
+
+                                }}
+
+                                transition={{
+                                    duration:0.25,
+                                }}
+
+                                className="
+                                    max-h-[80vh]
+                                    max-w-full
+                                    rounded-xl
+                                    object-contain
+                                "
+                            />
+
+                        </TransformComponent>
+                    </div>
+
+                </TransformWrapper>
+            {/* </div> */}
 
 
             {/* Bottom */}
@@ -222,54 +295,51 @@ export default function FullscreenPreview({
                 pb-8
                 "
             >
-
                 {photos.length > 1 ? (
-                <>
-                    {/* Previous */}
-                    <button
-                        onClick={handlePrevious}
-                        className="
-                            rounded-full
-                            bg-white/10
-                            p-3
-                            text-white
-                            backdrop-blur
-                            transition
-                            active:scale-95
-                        "
-                    >
-                        <ChevronLeft size={28}/>
-                    </button>
+                    <>
+
+                        {/* Previous */}
+                        <button
+                            onClick={onPrevious}
+                            className="
+                                rounded-full
+                                bg-white/10
+                                p-3
+                                text-white
+                                backdrop-blur
+                                active:scale-95
+                            "
+                        >
+                            <ChevronLeft size={28}/>
+                        </button>
+
+                        <div
+                            className="
+                                text-sm
+                                text-white/50
+                            "
+                        >
+                            swipe
+                        </div>
 
 
-                    {/* Spacer */}
-                    <div
-                    className="
-                        text-sm
-                        text-white/60
-                    "
-                    >
-                        swipe
-                    </div>
+                        {/* Next */}
+                        <button
+                            onClick={onNext}
+                            className="
+                                rounded-full
+                                bg-white/10
+                                p-3
+                                text-white
+                                backdrop-blur
+                                active:scale-95
+                            "
+                        >
+                            <ChevronRight size={28}/>
+                        </button>
 
+                    </>
 
-                    {/* Next */}
-                    <button
-                    onClick={handleNext}
-                    className="
-                        rounded-full
-                        bg-white/10
-                        p-3
-                        text-white
-                        backdrop-blur
-                        transition
-                        active:scale-95
-                    "
-                    >
-                        <ChevronRight size={28}/>
-                    </button>
-
-                </>
                 ) : (
                     <div />
                 )}
@@ -278,5 +348,7 @@ export default function FullscreenPreview({
 
 
         </motion.div>
+
     );
+
 }
