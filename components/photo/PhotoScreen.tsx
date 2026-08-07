@@ -5,7 +5,6 @@ import PhotoPreview from "./preview/PhotoPreview";
 
 import { usePhotoFlow } from "@/hooks/usePhotoFlow";
 
-
 type Props = {
   flow: ReturnType<typeof usePhotoFlow>;
   onUpload: () => void;
@@ -14,7 +13,6 @@ type Props = {
   onSelectPhoto: () => void;
 };
 
-
 export default function PhotoScreen({
   flow,
   onUpload,
@@ -22,8 +20,6 @@ export default function PhotoScreen({
   onViewPhotos,
   onSelectPhoto,
 }: Props) {
-
-
   if (flow.state.status === "success") {
     return (
       <UploadComplete
@@ -46,6 +42,7 @@ export default function PhotoScreen({
         onClear: flow.actions.clearPhotos,
         onAddPhoto: onSelectPhoto,
         onUpload,
+        onRemovePhoto: flow.actions.removePhoto,
       }}
     />
   );

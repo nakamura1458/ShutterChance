@@ -74,6 +74,9 @@ export function usePhotoFlow({
       // 追加選択
       addPhotos: photo.actions.addPhotos,
 
+      // 1枚削除
+      removePhoto: photo.actions.removePhoto,
+
       // クリア
       clearPhotos,
 

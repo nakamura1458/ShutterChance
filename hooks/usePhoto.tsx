@@ -24,6 +24,17 @@ export function usePhoto() {
     []
   );
 
+  // 1枚削除
+  const removePhoto = useCallback(
+    (index: number) => {
+      setPhotosState((prev) =>
+        prev.filter((_, i) => i !== index)
+      );
+    },
+    []
+  );
+
+  // 全て削除
   const clearPhotos = useCallback(() => {
     setPhotosState([]);
   }, []);
@@ -36,6 +47,7 @@ export function usePhoto() {
     actions: {
       setPhotos,
       addPhotos,
+      removePhoto,
       clearPhotos,
     },
   };
