@@ -82,12 +82,13 @@ export default function UploadComplete({
           w-full
           max-w-sm
           rounded-3xl
-          bg-white
+          bg-white/10
           p-8
           text-center
-          shadow-xl
+          shadow-2xl
+          backdrop-blur-xl
           border
-          border-neutral-100
+          border-white/10
         "
       >
 
@@ -115,12 +116,13 @@ export default function UploadComplete({
             items-center
             justify-center
             rounded-full
-            bg-green-50
+            bg-white/10
+            backdrop-blur
           "
         >
           <CheckCircle2
             size={60}
-            className="text-green-500"
+            className="text-white"
             strokeWidth={2}
           />
         </motion.div>
@@ -183,10 +185,13 @@ export default function UploadComplete({
           }}
           className="
             mt-7
-            rounded-2xl
-            bg-gray-50
+            rounded-3xl
+            bg-white/5
             px-5
-            py-5
+            py-6
+            backdrop-blur
+            border
+            border-white/10
           "
         >
 
@@ -209,6 +214,9 @@ export default function UploadComplete({
                   rotate: (index - 1) * 8,
                   scale: 1,
                 }}
+                whileHover={{
+                  scale: 1.03,
+                }}
                 transition={{
                   delay: 0.9 + index * 0.15,
                   type: "spring",
@@ -216,13 +224,13 @@ export default function UploadComplete({
                 }}
                 className="
                   absolute
-                  h-36
-                  w-28
+                  h-40
+                  w-32
                   rounded-2xl
                   object-cover
-                  border-4
-                  border-white
-                  shadow-xl
+                  border
+                  border-white/30
+                  shadow-2xl
                 "
                 style={{
                   left: "50%",
@@ -236,12 +244,12 @@ export default function UploadComplete({
 
           <p
             className="
-              mt-3
+              mt-4
               text-sm
-              text-gray-600
+              text-white/70
             "
           >
-            <span className="font-semibold text-gray-800">
+            <span className="font-semibold text-white">
               {photos.length}枚
             </span>
             の写真を
@@ -263,7 +271,7 @@ export default function UploadComplete({
             y: 0,
           }}
           transition={{
-            delay: 1.2,
+            delay: 1.1,
           }}
           className="
             mt-8
@@ -273,26 +281,29 @@ export default function UploadComplete({
           "
         >
 
-          <button
+          <motion.button
             onClick={onViewPhotos}
+            whileTap={{
+              scale:0.96,
+            }}
             className="
               flex
+              h-14
               items-center
               justify-center
               gap-2
-              rounded-xl
-              bg-black
-              py-3
+              rounded-2xl
+              bg-white
               text-sm
-              font-medium
-              text-white
+              font-semibold
+              text-black
+              shadow-lg
               transition
-              hover:bg-gray-800
             "
           >
-            <Images size={18} />
-            写真を見る
-          </button>
+            <Images size={20} />
+            ギャラリーを見る
+          </motion.button>
 
 
           <button
@@ -304,11 +315,11 @@ export default function UploadComplete({
               gap-2
               rounded-xl
               border
-              border-gray-200
+              border-white/20
+              text-white/70
               py-3
               text-sm
               font-medium
-              text-gray-700
               transition
               hover:bg-gray-50
             "

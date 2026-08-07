@@ -1,8 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Loader2, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import FullscreenPreview from "@/components/gallery/FullscreenPreview";
 
 type Props = {
   photos: File[];
@@ -21,9 +23,7 @@ export default function PhotoPreview({
 }: Props) {
 
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [selectedIndex, setSelectedIndex] =
-    useState<number | null>(null);
-
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const urls = photos.map((file) =>
@@ -61,41 +61,99 @@ export default function PhotoPreview({
     );
   };
 
-
   return (
     <div className="flex h-full min-h-0 flex-col bg-black">
 
-
       {/* 写真エリア */}
-      <div className="min-h-0 flex-1 overflow-auto p-4">
+      <div className="min-h-0 flex-1 overflow-auto">
 
-        <div className="mb-3 text-sm text-white/80">
-          {photos.length}枚選択中
+        {/* Header */}
+        <div
+          className="
+            sticky
+            top-0
+            z-20
+            bg-black/80
+            px-5
+            py-5
+            backdrop-blur-xl
+          "
+        >
+          <h2
+            className="
+              text-xl
+              font-semibold
+              tracking-tight
+              text-white
+            "
+          >
+            写真を確認
+          </h2>
+
+          <p
+            className="
+              mt-1
+              text-sm
+              text-white/60
+            "
+          >
+            {photos.length}枚の写真
+          </p>
         </div>
 
 
-        <div className="grid grid-cols-3 gap-2">
+        {/* Photo Grid */}
+        <div
+          className="
+            grid
+            grid-cols-3
+            gap-1
+            px-1
+            pb-6
+          "
+        >
 
           {previewUrls.map((url, index) => (
-            <button
+
+            <motion.button
               key={index}
               type="button"
-              onClick={() =>
-                setSelectedIndex(index)
-              }
+              initial={{
+                opacity: 0,
+                scale: 0.85,
+              }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+              }}
+              transition={{
+                duration: 0.25,
+                delay: index * 0.04,
+              }}
+              className="
+                overflow-hidden
+                rounded-xl
+                active:scale-95
+                transition-transform
+              "
+              onClick={() => {
+                setSelectedIndex(index);
+              }}
             >
+
               <img
                 src={url}
                 alt={`選択写真 ${index + 1}`}
                 className="
                   aspect-square
                   w-full
-                  rounded-lg
                   object-cover
-                  active:opacity-70
                 "
               />
-            </button>
+
+            {/* </button> */}
+            </motion.button>
+
           ))}
 
         </div>
@@ -103,127 +161,117 @@ export default function PhotoPreview({
       </div>
 
 
-
       {/* 拡大表示 */}
       {selectedIndex !== null && (
-        <div
-          className="
-            fixed
-            inset-0
-            z-[300]
-            flex
-            items-center
-            justify-center
-            bg-black
-          "
-        >
-
-          <button
-            className="absolute right-4 top-4 text-white"
-            onClick={() =>
-              setSelectedIndex(null)
-            }
-          >
-            <X size={32}/>
-          </button>
-
-
-          <img
-            src={previewUrls[selectedIndex]}
-            className="
-              max-h-[85vh]
-              max-w-full
-              object-contain
-            "
-          />
-
-
-          {photos.length > 1 && (
-            <>
-              <button
-                className="
-                  absolute
-                  left-4
-                  text-white
-                "
-                onClick={showPrevious}
-              >
-                <ChevronLeft size={40}/>
-              </button>
-
-
-              <button
-                className="
-                  absolute
-                  right-4
-                  text-white
-                "
-                onClick={showNext}
-              >
-                <ChevronRight size={40}/>
-              </button>
-            </>
-          )}
-
-        </div>
+        <FullscreenPreview
+          photos={previewUrls}
+          selectedIndex={selectedIndex}
+          onClose={() =>
+            setSelectedIndex(null)
+          }
+          onNext={showNext}
+          onPrevious={showPrevious}
+        />
       )}
 
 
-
-      {/* 下部ボタン */}
+      {/* 下部アクション */}
       <div
         className="
-          grid
-          grid-cols-3
-          gap-2
+          space-y-3
           border-t
           border-white/10
           bg-black/80
           p-4
-          backdrop-blur
+          pb-6
+          backdrop-blur-xl
         "
       >
 
+        {/* 写真追加 */}
         <Button
           type="button"
-          variant="secondary"
-          className="h-14"
-          onClick={actions.onClear}
-          disabled={uploading}
-        >
-          🗑
-          <span className="ml-1">
-            クリア
-          </span>
-        </Button>
-
-
-        <Button
-          type="button"
-          variant="secondary"
-          className="h-14"
+          variant="ghost"
+          className="
+            h-12
+            w-full
+            rounded-xl
+            text-white
+            hover:bg-white/10
+          "
           onClick={actions.onAddPhoto}
           disabled={uploading}
         >
-          ＋追加
+          ＋ 写真を追加
         </Button>
 
 
-        <Button
+        {/* 共有ボタン */}
+        <motion.button
           type="button"
-          className="h-14"
+          className="
+            flex
+            h-14
+            w-full
+            items-center
+            justify-center
+            rounded-2xl
+            bg-primary
+            text-base
+            font-semibold
+            text-primary-foreground
+            shadow-lg
+            disabled:opacity-60
+          "
+          whileTap={{
+            scale: 0.96,
+          }}
+          transition={{
+            duration:0.15,
+          }}
           onClick={actions.onUpload}
           disabled={uploading}
         >
+
           {uploading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-              送信
+              <Loader2
+                className="
+                  mr-2
+                  h-5
+                  w-5
+                  animate-spin
+                "
+              />
+
+              写真を届けています...
             </>
           ) : (
-            <>☁️送信</>
+            <>
+              ✨ 写真を共有する
+            </>
           )}
-        </Button>
+
+        </motion.button>
+
+
+        {/* 選択解除 */}
+        <button
+          type="button"
+          className="
+            w-full
+            text-center
+            text-sm
+            text-white/50
+            transition
+            hover:text-white/80
+          "
+          onClick={actions.onClear}
+          disabled={uploading}
+        >
+          選択を解除
+        </button>
+
 
       </div>
 
