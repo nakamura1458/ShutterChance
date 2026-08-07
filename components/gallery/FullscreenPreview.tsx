@@ -81,19 +81,22 @@ export default function FullscreenPreview({
         }
     };
 
+
     const swipeHandlers = useSwipeable({
-        onSwipedLeft: () => {
-            if (!zoomed) {
+        onSwiped: (eventData) => {
+            if (zoomed) return;
+
+            if (eventData.dir === "Left") {
                 onNext();
             }
-        },
 
-        onSwipedRight: () => {
-            if (!zoomed) {
+            if (eventData.dir === "Right") {
                 onPrevious();
             }
         },
 
+        delta: 50,
+        swipeDuration: 500,
         preventScrollOnSwipe: true,
         trackMouse: true,
     });
@@ -185,105 +188,96 @@ export default function FullscreenPreview({
 
 
             {/* Photo */}
-            {/* <div
-                {...swipeHandlers}
-                className="
-                flex
-                flex-1
-                items-center
-                justify-center
-                overflow-hidden
-                px-4
-                touch-none
-                "
-            > */}
-                <TransformWrapper
-                    key={selectedIndex}
-                    initialScale={1}
-                    onTransformed={(ref) => {
-                        setZoomed(
-                            ref.state.scale > 1
-                        );
-                    }}
-                    minScale={1}
-                    maxScale={4}
+            
+            <TransformWrapper
+                key={selectedIndex}
+                initialScale={1}
+                minScale={1}
+                maxScale={4}
 
-                    doubleClick={{
-                        mode:"toggle",
-                        step:2,
-                    }}
+                onTransformed={(ref) => {
+                    setZoomed(
+                        ref.state.scale > 1
+                    );
+                }}
 
-                    pinch={{
-                        step:5,
-                    }}
+                doubleClick={{
+                    mode:"toggle",
+                    step:2,
+                }}
 
-                    panning={{
-                        disabled:false,
-                    }}
+                pinch={{
+                    step:5,
+                }}
 
-                    wheel={{
-                        disabled:true,
-                    }}
+                panning={{
+                    disabled:false,
+                }}
 
-                    centerOnInit
+                wheel={{
+                    disabled:true,
+                }}
+
+                centerOnInit
+            >
+                <div
+                    {...swipeHandlers}
+                    className="
+                    flex
+                    flex-1
+                    items-center
+                    justify-center
+                    overflow-hidden
+                    px-4
+                    "
                 >
-                    <div
-                        {...swipeHandlers}
-                        className="
-                        flex
-                        flex-1
-                        items-center
-                        justify-center
-                        overflow-hidden
-                        px-4
-                        touch-none
-                        "
-                    >
-
-                        <TransformComponent
-                            wrapperClass="
+                    <TransformComponent
+                        wrapperClass="
                             flex
                             h-full
                             w-full
                             items-center
                             justify-center
+                        "
+
+                        contentClass="
+                            touch-none
+                        "
+                    >
+
+                        <motion.img
+                            src={
+                                photos[selectedIndex]
+                            }
+
+                            initial={{
+                                opacity:0,
+                                scale:0.96,
+                            }}
+
+                            animate={{
+                                opacity:1,
+                                scale:1,
+
+                            }}
+
+                            transition={{
+                                duration:0.25,
+                            }}
+
+                            className="
+                                max-h-[80vh]
+                                max-w-full
+                                rounded-xl
+                                object-contain
                             "
-                        >
+                        />
 
-                            <motion.img
-                                src={
-                                    photos[selectedIndex]
-                                }
+                    </TransformComponent>
+                </div>
 
-                                initial={{
-                                    opacity:0,
-                                    scale:0.96,
-                                }}
-
-                                animate={{
-                                    opacity:1,
-                                    scale:1,
-
-                                }}
-
-                                transition={{
-                                    duration:0.25,
-                                }}
-
-                                className="
-                                    max-h-[80vh]
-                                    max-w-full
-                                    rounded-xl
-                                    object-contain
-                                "
-                            />
-
-                        </TransformComponent>
-                    </div>
-
-                </TransformWrapper>
-            {/* </div> */}
-
+            </TransformWrapper>
+            
 
             {/* Bottom */}
             <div
