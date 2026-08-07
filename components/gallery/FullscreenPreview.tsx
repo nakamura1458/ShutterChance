@@ -79,6 +79,8 @@ export default function FullscreenPreview({
                 flex
                 flex-col
                 bg-black
+                overflow-hidden
+                touch-none
             "
         >
 
@@ -130,12 +132,13 @@ export default function FullscreenPreview({
             {/* Photo Area */}
             <div
                 className="
-                flex
-                flex-1
-                items-center
-                justify-center
-                overflow-hidden
-                px-4
+                    flex
+                    flex-1
+                    items-center
+                    justify-center
+                    overflow-hidden
+                    px-4
+                    touch-none
                 "
             >
 
@@ -144,7 +147,7 @@ export default function FullscreenPreview({
                     key={selectedIndex}
                     src={photos[selectedIndex]}
 
-                    drag
+                    drag={scale > 1 ? true : "x"}
 
                     dragConstraints={{
                         left:-300,
@@ -162,11 +165,11 @@ export default function FullscreenPreview({
                             return;
                         }
 
-                        if(info.offset.x < -80){
+                        if(info.offset.x < -50){
                             handleNext();
                         }
 
-                        if(info.offset.x > 80){
+                        if(info.offset.x > 50){
                             handlePrevious();
                         }
 
