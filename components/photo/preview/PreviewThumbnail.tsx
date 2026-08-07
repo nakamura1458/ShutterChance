@@ -82,6 +82,7 @@ export default function PreviewThumbnail({
                 absolute
                 right-1
                 top-1
+								z-10
                 flex
                 h-5
                 w-5
