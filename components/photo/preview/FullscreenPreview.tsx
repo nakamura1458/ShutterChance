@@ -8,6 +8,7 @@ type Props = {
   onClear: () => void;
   onAddPhoto: () => void;
   onUpload: () => void;
+  onRemovePhoto: (index: number) => void;
 };
 
 export default function FullscreenPreview({
@@ -16,6 +17,7 @@ export default function FullscreenPreview({
   onClear,
   onUpload,
   onAddPhoto,
+  onRemovePhoto,
 }: Props) {
   return (
     <div className="fixed inset-0 z-[200] h-dvh w-screen overflow-hidden bg-black">
@@ -26,6 +28,7 @@ export default function FullscreenPreview({
           onClear,
           onUpload,
           onAddPhoto,
+          onRemovePhoto,
         }}
       />
     </div>
