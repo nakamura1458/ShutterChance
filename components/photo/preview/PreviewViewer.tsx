@@ -79,6 +79,29 @@ export default function PreviewViewer({
                   select-none
                 "
               />
+
+              <button
+                type="button"
+                onClick={onRemove}
+                className="
+                  absolute
+                  right-2
+                  top-2
+                  z-20
+                  flex
+                  h-10
+                  w-10
+                  items-center
+                  justify-center
+                  rounded-full
+                  bg-black/60
+                  text-2xl
+                  text-white
+                  backdrop-blur-md
+                "
+              >
+                ×
+              </button>
               
             </div>
           </motion.div>
