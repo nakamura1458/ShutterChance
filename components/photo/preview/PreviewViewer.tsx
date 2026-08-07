@@ -44,7 +44,7 @@ export default function PreviewViewer({
     >
       <AnimatePresence mode="wait">
         {url && (
-          <motion.div
+           <motion.div
             key={url}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -62,47 +62,23 @@ export default function PreviewViewer({
               className="
                 relative
                 flex
-                h-full
-                w-full
-                items-center
-                justify-center
+                h-auto
+                max-h-full
+                max-w-full
               "
             >
               <img
                 src={url}
                 draggable={false}
                 className="
-                  max-h-full
+                  block
+                  max-h-[calc(100%-16px)]
                   max-w-full
                   rounded-2xl
                   object-contain
                   select-none
                 "
               />
-
-              <button
-                type="button"
-                onClick={onRemove}
-                className="
-                  absolute
-                  right-2
-                  top-2
-                  z-20
-                  flex
-                  h-10
-                  w-10
-                  items-center
-                  justify-center
-                  rounded-full
-                  bg-black/60
-                  text-2xl
-                  text-white
-                  backdrop-blur-md
-                  active:scale-90
-                "
-              >
-                ×
-              </button>
             </div>
           </motion.div>
         )}
