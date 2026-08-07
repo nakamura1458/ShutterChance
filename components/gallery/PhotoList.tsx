@@ -3,12 +3,13 @@
 import { useState } from "react";
 import {
   CheckSquare,
+  Square,
   X,
 } from "lucide-react";
 import PhotoCard from "./PhotoCard";
 import FullscreenPhotoViewer from "./FullscreenPhotoViewer";
 import type { PhotoListItem } from "@/types/photo";
-import { downloadPhoto } from "@/lib/utils/downloadPhoto";
+import { savePhotos } from "@/lib/utils/savePhotos";
 
 type Props = {
   photos: PhotoListItem[];
@@ -20,6 +21,8 @@ export default function PhotoList({ photos }: Props) {
   const [selectionMode, setSelectionMode] = useState(false);
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const [isSaving, setIsSaving] = useState(false);
 
   const toggleSelection = (photoId: string) => {
     setSelectedIds((prev) =>
@@ -67,22 +70,38 @@ export default function PhotoList({ photos }: Props) {
               {selectedIds.length}枚選択中
             </p>
 
-
             <button
               onClick={() => {
-                setSelectedIds(
-                  photos.map(
-                    (photo) => photo.id
-                  )
-                );
+                if (selectedIds.length > 0) {
+                  // 1枚でも選択されていたら全解除
+                  setSelectedIds([]);
+                } else {
+                  // 0枚なら全選択
+                  setSelectedIds(
+                    photos.map((photo) => photo.id)
+                  );
+                }
               }}
               className="
+                flex
+                items-center
+                gap-1
                 text-sm
                 font-medium
                 text-blue-600
               "
             >
-              すべて選択
+              {selectedIds.length > 0 ? (
+                <>
+                  <Square size={16} />
+                  すべて解除
+                </>
+              ) : (
+                <>
+                  <CheckSquare size={16} />
+                  すべて選択
+                </>
+              )}
             </button>
 
           </>
@@ -224,7 +243,10 @@ export default function PhotoList({ photos }: Props) {
             </div>
 
             <button
-              disabled={selectedIds.length === 0}
+              disabled={
+                selectedIds.length === 0 ||
+                isSaving
+              }
               className="
                 rounded-full
                 bg-blue-600
@@ -240,17 +262,27 @@ export default function PhotoList({ photos }: Props) {
                 disabled:opacity-50
               "
               onClick={async () => {
-                const selectedPhotos = photos.filter(
-                  (photo) =>
-                    selectedIds.includes(photo.id)
-                );
+                if (isSaving) return;
 
-                for (const photo of selectedPhotos) {
-                  await downloadPhoto(photo);
+                try {
+                  setIsSaving(true);
+
+                  const selectedPhotos = photos.filter((photo) =>
+                    selectedIds.includes(photo.id)
+                  );
+
+                  await savePhotos(selectedPhotos);
+
+                  // 保存成功
+                  setSelectedIds([]);
+                  setSelectionMode(false);
+
+                } finally {
+                  setIsSaving(false);
                 }
               }}
             >
-              ダウンロード
+              {isSaving ? "保存中..." : "保存する"}
             </button>
           </div>
         </div>

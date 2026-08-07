@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import type { PhotoListItem } from "@/types/photo";
 import { downloadPhoto } from "@/lib/utils/downloadPhoto";
+import { savePhotos } from "@/lib/utils/savePhotos";
 
 type Props = {
   photos: PhotoListItem[];
@@ -50,42 +51,47 @@ export default function FullscreenPhotoViewer({
     };
   }, [onPrevious, onNext, onClose]);
 
+  // const handleSavePhoto = async () => {
+  //   try {
+  //     const response = await fetch(photo.image_url);
+  //     const blob = await response.blob();
+
+  //     const file = new File(
+  //       [blob],
+  //       `${photo.guest_name || "photo"}.jpg`,
+  //       {
+  //         type: blob.type,
+  //       }
+  //     );
+
+  //     if (
+  //       navigator.canShare &&
+  //       navigator.canShare({
+  //         files: [file],
+  //       })
+  //     ) {
+  //       await navigator.share({
+  //         files: [file],
+  //         title: "写真を保存",
+  //       });
+
+  //       return;
+  //     }
+
+  //     await downloadPhoto(photo);
+
+  //   } catch (err) {
+  //     console.error(
+  //       "photo save failed",
+  //       err
+  //     );
+  //   }
+  // };
+
   const handleSavePhoto = async () => {
-    try {
-      const response = await fetch(photo.image_url);
-      const blob = await response.blob();
-
-      const file = new File(
-        [blob],
-        `${photo.guest_name || "photo"}.jpg`,
-        {
-          type: blob.type,
-        }
-      );
-
-      if (
-        navigator.canShare &&
-        navigator.canShare({
-          files: [file],
-        })
-      ) {
-        await navigator.share({
-          files: [file],
-          title: "写真を保存",
-        });
-
-        return;
-      }
-
-      await downloadPhoto(photo);
-
-    } catch (err) {
-      console.error(
-        "photo save failed",
-        err
-      );
-    }
+    await savePhotos([photo]);
   };
+
 
   return (
     <div
