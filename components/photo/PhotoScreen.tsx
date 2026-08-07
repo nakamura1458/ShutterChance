@@ -1,8 +1,10 @@
 "use client";
 
-import FullscreenPreview from "./preview/FullscreenPreview";
 import UploadComplete from "./upload/UploadComplete";
+import PhotoPreview from "./preview/PhotoPreview";
+
 import { usePhotoFlow } from "@/hooks/usePhotoFlow";
+
 
 type Props = {
   flow: ReturnType<typeof usePhotoFlow>;
@@ -12,6 +14,7 @@ type Props = {
   onSelectPhoto: () => void;
 };
 
+
 export default function PhotoScreen({
   flow,
   onUpload,
@@ -19,6 +22,7 @@ export default function PhotoScreen({
   onViewPhotos,
   onSelectPhoto,
 }: Props) {
+
 
   if (flow.state.status === "success") {
     return (
@@ -30,18 +34,19 @@ export default function PhotoScreen({
     );
   }
 
-
   if (!flow.state.photos.length) {
     return null;
   }
 
   return (
-    <FullscreenPreview
+    <PhotoPreview
       photos={flow.state.photos}
       uploading={flow.state.uploading}
-      onClear={flow.actions.clearPhotos}
-      onUpload={onUpload}
-      onAddPhoto={onSelectPhoto}
+      actions={{
+        onClear: flow.actions.clearPhotos,
+        onAddPhoto: onSelectPhoto,
+        onUpload,
+      }}
     />
   );
 }

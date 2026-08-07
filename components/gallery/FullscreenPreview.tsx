@@ -4,11 +4,12 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Download,
 } from "lucide-react";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useSwipeable } from "react-swipeable";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 
 type Props = {
@@ -29,59 +30,98 @@ export default function FullscreenPreview({
 }: Props) {
 
 
-  /**
-   * iPhone Safari用
-   * 背景スクロール完全停止
-   */
+  // 背景スクロール停止
   useEffect(() => {
 
     const scrollY = window.scrollY;
 
-    const body = document.body;
-
-    body.style.position = "fixed";
-    body.style.top = `-${scrollY}px`;
-    body.style.left = "0";
-    body.style.right = "0";
-    body.style.width = "100%";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
 
 
     return () => {
 
-      body.style.position = "";
-      body.style.top = "";
-      body.style.left = "";
-      body.style.right = "";
-      body.style.width = "";
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
 
       window.scrollTo(0, scrollY);
 
     };
 
-
   }, []);
 
 
 
-  /**
-   * swipe
-   */
+  // 保存
+  const handleDownload = async () => {
+
+    try {
+
+      const response =
+        await fetch(
+          photos[selectedIndex]
+        );
+
+      const blob =
+        await response.blob();
+
+
+      const url =
+        URL.createObjectURL(blob);
+
+
+      const link =
+        document.createElement("a");
+
+
+      link.href = url;
+
+      link.download =
+        `photo-${selectedIndex + 1}.jpg`;
+
+
+      link.click();
+
+
+      URL.revokeObjectURL(url);
+
+
+    } catch(error){
+
+      console.error(
+        "download failed",
+        error
+      );
+
+    }
+
+  };
+
+
+
+  // swipe
   const swipeHandlers = useSwipeable({
 
-    onSwipedLeft: () => {
+    onSwipedLeft(){
+
       onNext();
+
     },
 
-    onSwipedRight: () => {
+    onSwipedRight(){
+
       onPrevious();
+
     },
 
 
-    preventScrollOnSwipe: true,
+    preventScrollOnSwipe:true,
 
-    trackMouse: true,
+    trackMouse:true,
 
-    delta: 50,
+    delta:50,
 
   });
 
@@ -93,15 +133,24 @@ export default function FullscreenPreview({
 
       initial={{
         opacity:0,
+        y:"100%",
       }}
 
       animate={{
         opacity:1,
+        y:0,
       }}
 
       exit={{
         opacity:0,
       }}
+
+      transition={{
+        type:"spring",
+        damping:28,
+        stiffness:250,
+      }}
+
 
       className="
         fixed
@@ -109,12 +158,13 @@ export default function FullscreenPreview({
         z-[9999]
         flex
         flex-col
-        bg-black
         overflow-hidden
+        bg-black
       "
 
+
       style={{
-        touchAction:"none",
+        height:"100dvh",
       }}
 
     >
@@ -128,51 +178,78 @@ export default function FullscreenPreview({
           items-center
           justify-between
           px-5
-          py-4
+          pt-5
           text-white
-          shrink-0
         "
       >
 
+
         <button
+
           onClick={onClose}
+
           className="
             rounded-full
             bg-white/10
-            p-2
-            backdrop-blur
-            active:scale-95
+            p-3
+            backdrop-blur-xl
+            active:scale-90
           "
+
         >
+
           <X size={24}/>
+
         </button>
 
 
 
         <div
           className="
+            rounded-full
+            bg-white/10
+            px-4
+            py-2
             text-sm
-            text-white/70
+            text-white/80
+            backdrop-blur-xl
           "
         >
+
           {selectedIndex + 1}
           {" / "}
           {photos.length}
+
         </div>
 
 
-        <div
+
+        <button
+
+          onClick={handleDownload}
+
           className="
-            w-10
+            rounded-full
+            bg-white/10
+            p-3
+            backdrop-blur-xl
+            active:scale-90
           "
-        />
+
+        >
+
+          <Download size={22}/>
+
+        </button>
+
 
       </div>
 
 
 
 
-      {/* Photo Area */}
+
+      {/* Photo */}
 
       <div
 
@@ -185,54 +262,46 @@ export default function FullscreenPreview({
           justify-center
           overflow-hidden
           px-4
+          touch-none
         "
-
-        style={{
-          touchAction:"none",
-        }}
 
       >
 
-        <AnimatePresence mode="wait">
 
-          <motion.img
+        <motion.img
 
-            key={photos[selectedIndex]}
+          key={selectedIndex}
 
-            src={photos[selectedIndex]}
+          src={
+            photos[selectedIndex]
+          }
 
-            initial={{
-              opacity:0,
-              x:40,
-            }}
 
-            animate={{
-              opacity:1,
-              x:0,
-            }}
+          initial={{
+            opacity:0,
+            scale:0.96,
+          }}
 
-            exit={{
-              opacity:0,
-              x:-40,
-            }}
 
-            transition={{
-              duration:0.2,
-            }}
+          animate={{
+            opacity:1,
+            scale:1,
+          }}
 
-            className="
-              max-h-full
-              max-w-full
-              rounded-xl
-              object-contain
-              select-none
-            "
 
-            draggable={false}
+          transition={{
+            duration:0.25,
+          }}
 
-          />
 
-        </AnimatePresence>
+          className="
+            max-h-full
+            max-w-full
+            rounded-2xl
+            object-contain
+          "
+
+        />
 
 
       </div>
@@ -244,23 +313,18 @@ export default function FullscreenPreview({
       {/* Bottom */}
 
       <div
-
         className="
           flex
           items-center
           justify-between
           px-6
-          pb-8
-          shrink-0
+          pb-10
         "
-
       >
-
 
         {
           photos.length > 1
-          ?
-          <>
+          ? <>
 
 
             <button
@@ -270,28 +334,28 @@ export default function FullscreenPreview({
               className="
                 rounded-full
                 bg-white/10
-                p-3
+                p-4
                 text-white
-                backdrop-blur
-                active:scale-95
+                backdrop-blur-xl
+                active:scale-90
               "
 
             >
-              <ChevronLeft size={28}/>
-            </button>
 
+              <ChevronLeft size={30}/>
+
+            </button>
 
 
 
             <div
               className="
-                text-xs
-                text-white/40
+                text-sm
+                text-white/50
               "
             >
               swipe
             </div>
-
 
 
 
@@ -302,22 +366,22 @@ export default function FullscreenPreview({
               className="
                 rounded-full
                 bg-white/10
-                p-3
+                p-4
                 text-white
-                backdrop-blur
-                active:scale-95
+                backdrop-blur-xl
+                active:scale-90
               "
 
             >
 
-              <ChevronRight size={28}/>
+              <ChevronRight size={30}/>
 
             </button>
 
 
           </>
           :
-          <div />
+          <div/>
 
         }
 
