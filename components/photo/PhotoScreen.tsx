@@ -11,6 +11,7 @@ type Props = {
   uploadedPhotos: File[];
   onViewPhotos: () => void;
   onSelectPhoto: () => void;
+  onClear: () => void;
 };
 
 export default function PhotoScreen({
@@ -19,6 +20,7 @@ export default function PhotoScreen({
   uploadedPhotos,
   onViewPhotos,
   onSelectPhoto,
+  onClear,
 }: Props) {
   if (flow.state.status === "success") {
     return (
@@ -39,7 +41,7 @@ export default function PhotoScreen({
       photos={flow.state.photos}
       uploading={flow.state.uploading}
       actions={{
-        onClear: flow.actions.clearPhotos,
+        onClear,
         onAddPhoto: onSelectPhoto,
         onUpload,
         onRemovePhoto: flow.actions.removePhoto,

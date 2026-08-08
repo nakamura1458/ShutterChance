@@ -32,8 +32,7 @@ export default function PhotoUpload({
 
   const imagePickerRef = useRef<HTMLInputElement>(null);
 
-  const { guestName, saveGuestName, clearGuestName } =
-    useGuestName(eventToken);
+  const { guestName, saveGuestName, clearGuestName } = useGuestName(eventToken);
 
   const [guestNameDraft, setGuestNameDraft] = useState("");
 
@@ -80,6 +79,11 @@ export default function PhotoUpload({
     onUploadSuccess?.();
   };
 
+  const handleClear = () => {
+    flow.actions.clearPhotos();
+    setSelected(false);
+  };
+
   return (
     <>
       {/* ← 常に存在させる */}
@@ -93,6 +97,7 @@ export default function PhotoUpload({
           flow={flow}
           uploadedPhotos={uploadedPhotos}
           onUpload={handleUpload}
+          onClear={handleClear}
           onViewPhotos={() => {
             requestAnimationFrame(() => {
               document
