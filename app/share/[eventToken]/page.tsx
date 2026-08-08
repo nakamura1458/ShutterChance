@@ -7,7 +7,7 @@ type Props = {
   }>;
 };
 
-export default async function AdminPage({ params }: Props) {
+export default async function SharePage({ params }: Props) {
   const { eventToken } = await params;
 
   if (!eventToken) {
@@ -21,18 +21,25 @@ export default async function AdminPage({ params }: Props) {
   }
 
   const guestUrl = `${appUrl}/e/${eventToken}`;
-  // const guestUrl = `http://localhost:3000/e/${eventToken}`;
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-md">
-        <h1 className="text-2xl font-bold">
-          ShutterChance 管理画面
-        </h1>
+        <div className="text-center">
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-gray-400">
+            ShutterChance
+          </p>
 
-        <p className="mt-2 text-sm text-gray-500">
-          Event Token: {eventToken}
-        </p>
+          <h1 className="mt-4 text-3xl font-bold tracking-tight">
+            このイベントをシェア
+          </h1>
+
+          <p className="mt-3 text-sm leading-6 text-gray-500">
+            友だちやゲストに共有して、
+            <br />
+            みんなで写真を集めましょう。
+          </p>
+        </div>
 
         <QRCodeDisplay guestUrl={guestUrl} />
       </div>

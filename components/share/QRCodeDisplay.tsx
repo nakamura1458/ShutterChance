@@ -218,6 +218,41 @@ export default function QRCodeDisplay({ guestUrl }: Props) {
     }
   };
 
+
+  /**
+   * イベントそのものをシェア
+   */
+  const handleShareEvent = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "ShutterChance",
+          text: "このイベントに参加して、写真をシェアしよう！",
+          url: guestUrl,
+        });
+
+        return;
+      }
+
+      // Web Share API非対応の場合はURLをコピー
+      await navigator.clipboard.writeText(guestUrl);
+
+      setCopied(true);
+
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    } catch (error) {
+      // ユーザーが共有をキャンセルした場合
+      if ((error as Error).name === "AbortError") {
+        return;
+      }
+
+      console.error("Event share failed:", error);
+    }
+  };
+
+
   /**
    * URLをコピー
    */
@@ -289,11 +324,21 @@ export default function QRCodeDisplay({ guestUrl }: Props) {
         </div>
       </div>
 
+      {/* イベントをシェア */}
+      <button
+        type="button"
+        onClick={handleShareEvent}
+        className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600 active:scale-[0.98]"
+      >
+        <Share2 size={18} />
+        このイベントをシェア
+      </button>
+
       {/* カードをシェア */}
       <button
         type="button"
         onClick={handleShareCard}
-        className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-black px-4 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 active:scale-[0.98]"
       >
         <Share2 size={18} />
         カードをシェア
@@ -303,7 +348,7 @@ export default function QRCodeDisplay({ guestUrl }: Props) {
       <button
         type="button"
         onClick={handleShareQr}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 active:scale-[0.98]"
       >
         <Share2 size={18} />
         QRコードだけをシェア
@@ -313,7 +358,7 @@ export default function QRCodeDisplay({ guestUrl }: Props) {
       <button
         type="button"
         onClick={handleCopyUrl}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-gray-500 transition hover:bg-gray-100 active:scale-[0.98]"
       >
         {copied ? (
           <>

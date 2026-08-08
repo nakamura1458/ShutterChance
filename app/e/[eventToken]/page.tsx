@@ -1,6 +1,7 @@
 import { getEventByToken } from "@/services/event.service";
 import { getPhotos } from "@/services/photo.service";
 import PhotoPageClient from "@/components/photo/PhotoPageClient";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -45,12 +46,21 @@ export default async function EventPage({ params }: Props) {
           </p>
         </section>
 
+        {/* イベントをシェア */}
+        <div className="flex justify-center">
+          <Link
+            href={`/share/${eventToken}`}
+            className="flex items-center justify-center gap-2 rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
+          >
+            📤 このイベントをシェア
+          </Link>
+        </div>
+
         <PhotoPageClient
           eventId={event.id}
           eventToken={event.event_token}
           initialPhotos={photos}
         />
-
       </div>
     </main>
   );
