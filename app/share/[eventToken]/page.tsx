@@ -15,11 +15,11 @@ export default async function SharePage({ params }: Props) {
     notFound();
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  // const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
-  if (!appUrl) {
-    throw new Error("NEXT_PUBLIC_APP_URL is not configured.");
-  }
+  // if (!appUrl) {
+  //   throw new Error("NEXT_PUBLIC_APP_URL is not configured.");
+  // }
 
   const headersList = await headers();
 
