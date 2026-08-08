@@ -28,6 +28,9 @@ export default async function EventPage({ params }: Props) {
 
   const photos = await getPhotos(event.id);
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  const shareUrl = `${appUrl}/share/${eventToken}`;
+
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-6xl space-y-8 px-4 py-8">
@@ -49,7 +52,7 @@ export default async function EventPage({ params }: Props) {
         {/* イベントをシェア */}
         <div className="flex justify-center">
           <Link
-            href={`/share/${eventToken}`}
+            href={shareUrl}
             className="flex items-center justify-center gap-2 rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
           >
             📤 このイベントをシェア
