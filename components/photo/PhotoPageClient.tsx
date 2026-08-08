@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import PhotoUpload from "./PhotoUpload";
 import PhotoList from "@/components/gallery/PhotoList";
@@ -20,7 +20,6 @@ export default function PhotoPageClient({
   eventToken,
   initialPhotos,
 }: Props) {
-  const router = useRouter();
 
   const [photos, setPhotos] =
     useState(initialPhotos);
@@ -45,10 +44,8 @@ export default function PhotoPageClient({
 
         {photos.length > 12 && (
           <div className="text-center">
-            <button
-              onClick={() => {
-                router.push(`/e/${eventToken}/photos`);
-              }}
+            <Link
+              href={`/e/${eventToken}/photos`}
               className="
                 text-sm
                 font-medium
@@ -56,7 +53,7 @@ export default function PhotoPageClient({
               "
             >
               すべて見る →
-            </button>
+            </Link>
           </div>
         )}
       </div>

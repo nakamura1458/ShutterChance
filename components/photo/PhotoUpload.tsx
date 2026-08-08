@@ -93,20 +93,28 @@ export default function PhotoUpload({
       />
 
       {selected ? (
+        // <PhotoScreen
+        //   flow={flow}
+        //   uploadedPhotos={uploadedPhotos}
+        //   onUpload={handleUpload}
+        //   onClear={handleClear}
+        //   onViewPhotos={() => {
+        //     requestAnimationFrame(() => {
+        //       document
+        //         .getElementById("photo-list")
+        //         ?.scrollIntoView({
+        //           behavior: "smooth",
+        //         });
+        //     });
+        //   }}
+        //   onSelectPhoto={openAddPicker}
+        // />
         <PhotoScreen
           flow={flow}
           uploadedPhotos={uploadedPhotos}
+          eventToken={eventToken}
           onUpload={handleUpload}
           onClear={handleClear}
-          onViewPhotos={() => {
-            requestAnimationFrame(() => {
-              document
-                .getElementById("photo-list")
-                ?.scrollIntoView({
-                  behavior: "smooth",
-                });
-            });
-          }}
           onSelectPhoto={openAddPicker}
         />
       ) : (

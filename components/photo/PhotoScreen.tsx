@@ -9,7 +9,7 @@ type Props = {
   flow: ReturnType<typeof usePhotoFlow>;
   onUpload: () => void;
   uploadedPhotos: File[];
-  onViewPhotos: () => void;
+  eventToken: string;
   onSelectPhoto: () => void;
   onClear: () => void;
 };
@@ -18,15 +18,20 @@ export default function PhotoScreen({
   flow,
   onUpload,
   uploadedPhotos,
-  onViewPhotos,
+  eventToken,
   onSelectPhoto,
   onClear,
 }: Props) {
   if (flow.state.status === "success") {
     return (
+      // <UploadComplete
+      //   photos={uploadedPhotos}
+      //   onViewPhotos={onViewPhotos}
+      //   onRetryUpload={onSelectPhoto}
+      // />
       <UploadComplete
         photos={uploadedPhotos}
-        onViewPhotos={onViewPhotos}
+        eventToken={eventToken}
         onRetryUpload={onSelectPhoto}
       />
     );

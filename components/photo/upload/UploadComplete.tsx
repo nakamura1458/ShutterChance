@@ -8,16 +8,17 @@ import {
   Images,
   Upload,
 } from "lucide-react";
+import Link from "next/link";
 
 type Props = {
   photos: File[];
-  onViewPhotos: () => void;
+  eventToken: string;
   onRetryUpload: () => void;
 };
 
 export default function UploadComplete({
   photos,
-  onViewPhotos,
+  eventToken,
   onRetryUpload
 }: Props) {
 
@@ -281,29 +282,32 @@ export default function UploadComplete({
           "
         >
 
-          <motion.button
-            onClick={onViewPhotos}
+          <motion.div
             whileTap={{
-              scale:0.96,
+              scale: 0.96,
             }}
-            className="
-              flex
-              h-14
-              items-center
-              justify-center
-              gap-2
-              rounded-2xl
-              bg-white
-              text-sm
-              font-semibold
-              text-black
-              shadow-lg
-              transition
-            "
           >
-            <Images size={20} />
-            ギャラリーを見る
-          </motion.button>
+            <Link
+              href={`/e/${eventToken}/photos`}
+              className="
+                flex
+                h-14
+                items-center
+                justify-center
+                gap-2
+                rounded-2xl
+                bg-white
+                text-sm
+                font-semibold
+                text-black
+                shadow-lg
+                transition
+              "
+            >
+              <Images size={20} />
+              ギャラリーを見る
+            </Link>
+          </motion.div>
 
 
           <button
