@@ -19,9 +19,8 @@ type Props = {
 export default function UploadComplete({
   photos,
   eventToken,
-  onRetryUpload
+  onRetryUpload,
 }: Props) {
-
   // 🎉 完了演出
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -52,7 +51,6 @@ export default function UploadComplete({
     };
   }, [previewUrls]);
 
-
   return (
     <div
       className="
@@ -62,11 +60,11 @@ export default function UploadComplete({
         justify-center
         bg-gradient-to-b
         from-[#fffaf5]
+        via-[#fffdfb]
         to-white
         px-6
       "
     >
-
       <motion.div
         initial={{
           opacity: 0,
@@ -83,16 +81,14 @@ export default function UploadComplete({
           w-full
           max-w-sm
           rounded-3xl
-          bg-white/10
+          border
+          border-black/5
+          bg-white
           p-8
           text-center
-          shadow-2xl
-          backdrop-blur-xl
-          border
-          border-white/10
+          shadow-[0_20px_60px_rgba(0,0,0,0.10)]
         "
       >
-
         {/* 完了アイコン */}
         <motion.div
           initial={{
@@ -117,17 +113,17 @@ export default function UploadComplete({
             items-center
             justify-center
             rounded-full
-            bg-white/10
-            backdrop-blur
+            bg-green-50
+            ring-8
+            ring-green-50/60
           "
         >
           <CheckCircle2
             size={60}
-            className="text-white"
+            className="text-green-500"
             strokeWidth={2}
           />
         </motion.div>
-
 
         {/* メッセージ */}
         <motion.div
@@ -141,19 +137,17 @@ export default function UploadComplete({
             delay: 0.6,
           }}
         >
-
           <h2
             className="
               mt-6
               text-2xl
               font-semibold
               tracking-wide
-              text-gray-800
+              text-gray-900
             "
           >
-            写真を届けました
+            🎊アップロード完了
           </h2>
-
 
           <p
             className="
@@ -165,11 +159,9 @@ export default function UploadComplete({
           >
             素敵な写真をありがとうございます。
             <br />
-            新郎新婦の思い出に追加されました📸
+            写真が思い出に追加されました📸
           </p>
-
         </motion.div>
-
 
         {/* 写真共有カード */}
         <motion.div
@@ -187,17 +179,14 @@ export default function UploadComplete({
           className="
             mt-7
             rounded-3xl
-            bg-white/5
+            border
+            border-gray-100
+            bg-gray-50
             px-5
             py-6
-            backdrop-blur
-            border
-            border-white/10
           "
         >
-
           <div className="relative mx-auto h-40 w-56">
-
             {previewUrls.slice(0, 3).map((src, index) => (
               <motion.img
                 key={src}
@@ -225,41 +214,41 @@ export default function UploadComplete({
                 }}
                 className="
                   absolute
+                  left-1/2
                   h-40
                   w-32
+                  -translate-x-1/2
                   rounded-2xl
-                  object-cover
                   border
-                  border-white/30
-                  shadow-2xl
+                  border-white
+                  object-cover
+                  shadow-xl
                 "
                 style={{
-                  left: "50%",
-                  transform: `translateX(-50%) translateX(${(index - 1) * 32}px) rotate(${(index - 1) * 8}deg)`,
+                  transform: `translateX(calc(-50% + ${
+                    (index - 1) * 28
+                  }px)) rotate(${(index - 1) * 8}deg)`,
                   zIndex: index,
                 }}
               />
             ))}
-
           </div>
 
           <p
             className="
               mt-4
               text-sm
-              text-white/70
+              text-gray-500
             "
           >
-            <span className="font-semibold text-white">
+            <span className="font-semibold text-gray-900">
               {photos.length}枚
             </span>
             の写真を
             <br />
             ギャラリーへ追加しました
           </p>
-
         </motion.div>
-
 
         {/* ボタン */}
         <motion.div
@@ -281,7 +270,6 @@ export default function UploadComplete({
             gap-3
           "
         >
-
           <motion.div
             whileTap={{
               scale: 0.96,
@@ -294,21 +282,29 @@ export default function UploadComplete({
                 h-14
                 items-center
                 justify-center
-                gap-2
+                gap-2.5
                 rounded-2xl
+                border
+                border-gray-200
                 bg-white
                 text-sm
                 font-semibold
-                text-black
-                shadow-lg
-                transition
+                text-gray-800
+                shadow-md
+                transition-all
+                hover:bg-gray-50
+                hover:shadow-lg
+                active:scale-[0.98]
               "
             >
-              <Images size={20} />
+              <Images
+                size={20}
+                strokeWidth={2}
+                className="text-gray-700"
+              />
               ギャラリーを見る
             </Link>
           </motion.div>
-
 
           <button
             onClick={onRetryUpload}
@@ -319,13 +315,13 @@ export default function UploadComplete({
               gap-2
               rounded-xl
               border
-              border-gray-300
+              border-gray-200
               bg-white
-              text-gray-800
               py-3
               text-sm
               font-semibold
-              shadow-md
+              text-gray-700
+              shadow-sm
               transition
               hover:bg-gray-50
               active:scale-[0.98]
@@ -334,11 +330,8 @@ export default function UploadComplete({
             <Upload size={18} />
             もう一度写真を送る
           </button>
-
         </motion.div>
-
       </motion.div>
-
     </div>
   );
 }

@@ -114,7 +114,6 @@ export default function PhotoList({ photos }: Props) {
               📸 Gallery
             </h2>
 
-
             <div className="flex items-center gap-4">
 
               <p

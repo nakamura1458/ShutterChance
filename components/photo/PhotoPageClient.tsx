@@ -43,7 +43,7 @@ export default function PhotoPageClient({
         />
 
         {photos.length > 12 && (
-          <div className="text-center">
+          <div className="text-right pr-1">
             <Link
               href={`/e/${eventToken}/photos`}
               className="
