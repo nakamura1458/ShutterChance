@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import QRCodeDisplay from "@/components/share/QRCodeDisplay";
 
@@ -20,7 +21,22 @@ export default async function SharePage({ params }: Props) {
     throw new Error("NEXT_PUBLIC_APP_URL is not configured.");
   }
 
-  const guestUrl = `${appUrl}/e/${eventToken}`;
+  const headersList = await headers();
+
+  const host = headersList.get("host");
+
+  if (!host) {
+    throw new Error("Host could not be determined.");
+  }
+
+  const protocol =
+    process.env.NODE_ENV === "development"
+      ? "http"
+      : "https";
+
+  // const guestUrl = `${appUrl}/e/${eventToken}`;
+  // const guestUrl = `/e/${eventToken}`;
+  const guestUrl = `${protocol}://${host}/e/${eventToken}`;
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-8">
