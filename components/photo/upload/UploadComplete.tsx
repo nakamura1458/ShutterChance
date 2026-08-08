@@ -315,13 +315,16 @@ export default function UploadComplete({
               gap-2
               rounded-xl
               border
-              border-white/20
-              text-white/70
+              border-gray-300
+              bg-white
+              text-gray-800
               py-3
               text-sm
-              font-medium
+              font-semibold
+              shadow-md
               transition
               hover:bg-gray-50
+              active:scale-[0.98]
             "
           >
             <Upload size={18} />
