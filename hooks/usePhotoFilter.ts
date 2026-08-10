@@ -52,7 +52,10 @@ export function usePhotoFilter(
             (photo) =>
               photo.guest_name
           )
-          .filter(Boolean)
+          .filter(
+            (name): name is string =>
+              Boolean(name)
+          )
       )
     ).sort((a, b) =>
       a.localeCompare(b, "ja")
@@ -96,10 +99,15 @@ export function usePhotoFilter(
     }
 
     // 複数選択の場合は OR
-    return photos.filter((photo) =>
-      selectedGuestNames.includes(
-        photo.guest_name
-      )
+    //
+    // guest_name が null の写真は
+    // フィルター対象から除外
+    return photos.filter(
+      (photo) =>
+        photo.guest_name !== null &&
+        selectedGuestNames.includes(
+          photo.guest_name
+        )
     );
   }, [
     photos,
@@ -121,10 +129,15 @@ export function usePhotoFilter(
       }
 
       // 選択された人だけ
-      return photos.filter((photo) =>
-        pendingGuestNames.includes(
-          photo.guest_name
-        )
+      //
+      // guest_name が null の写真は
+      // フィルター対象から除外
+      return photos.filter(
+        (photo) =>
+          photo.guest_name !== null &&
+          pendingGuestNames.includes(
+            photo.guest_name
+          )
       ).length;
     }, [
       photos,
