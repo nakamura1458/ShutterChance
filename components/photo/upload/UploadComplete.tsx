@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import {
@@ -8,6 +8,7 @@ import {
   Images,
   Upload,
   Home,
+  Share2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -22,6 +23,10 @@ export default function UploadComplete({
   eventToken,
   onRetryUpload,
 }: Props) {
+  const [selectedIndexes, setSelectedIndexes] = useState<number[]>(
+    []
+  );
+
   // 🎉 完了演出
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -42,43 +47,119 @@ export default function UploadComplete({
     };
   }, []);
 
+  // プレビューURL生成
   const previewUrls = useMemo(() => {
     return photos.map((photo) => URL.createObjectURL(photo));
   }, [photos]);
 
+  // プレビューURL解放
   useEffect(() => {
     return () => {
-      previewUrls.forEach(URL.revokeObjectURL);
+      previewUrls.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
     };
   }, [previewUrls]);
 
+  // 写真の選択 / 選択解除
+  const togglePhoto = (index: number) => {
+    setSelectedIndexes((prev) => {
+      if (prev.includes(index)) {
+        return prev.filter((i) => i !== index);
+      }
+
+      return [...prev, index];
+    });
+  };
+
+  // 写真を共有
+  const handleShare = async () => {
+    const selectedPhotos = selectedIndexes
+      .map((index) => photos[index])
+      .filter((photo): photo is File => Boolean(photo));
+
+    if (selectedPhotos.length === 0) {
+      return;
+    }
+
+    if (!navigator.share) {
+      alert("この端末では写真の共有に対応していません。");
+      return;
+    }
+
+    try {
+      const canShareFiles =
+        navigator.canShare?.({
+          files: selectedPhotos,
+        }) ?? false;
+
+      if (!canShareFiles) {
+        alert("この端末では写真の共有に対応していません。");
+        return;
+      }
+
+      await navigator.share({
+        files: selectedPhotos,
+        title: "ShutterChance",
+      });
+    } catch (error) {
+      if (
+        error instanceof DOMException &&
+        error.name === "AbortError"
+      ) {
+        return;
+      }
+
+      console.error("写真の共有に失敗しました:", error);
+
+      alert("写真の共有に失敗しました。");
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 min-h-[100dvh] bg-white">
-      <motion.div
-        initial={{
-          opacity: 0,
-          y: 30,
-        }}
-        animate={{
-          opacity: 1,
-          y: 0,
-        }}
-        transition={{
-          duration: 0.6,
-        }}
+    <div
+      className="
+        fixed
+        inset-0
+        z-50
+        h-[100dvh]
+        w-full
+        overflow-hidden
+        bg-white
+      "
+    >
+      {/* 画面全体のスクロール領域 */}
+      <div
         className="
-          flex
-          min-h-[100dvh]
+          h-full
           w-full
-          flex-col
           overflow-y-auto
-          px-6
+          overscroll-contain
+          px-5
+          pt-8
           pb-[calc(env(safe-area-inset-bottom)+24px)]
-          pt-10
         "
       >
-        {/* メインコンテンツ */}
-        <div className="flex flex-1 flex-col items-center justify-center">
+        <motion.div
+          initial={{
+            opacity: 0,
+            y: 30,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          transition={{
+            duration: 0.6,
+          }}
+          className="
+            flex
+            min-h-full
+            w-full
+            flex-col
+            items-center
+          "
+        >
           {/* 完了アイコン */}
           <motion.div
             initial={{
@@ -99,6 +180,7 @@ export default function UploadComplete({
               flex
               h-24
               w-24
+              shrink-0
               items-center
               justify-center
               rounded-full
@@ -169,7 +251,6 @@ export default function UploadComplete({
             className="
               mt-7
               w-full
-              max-w-sm
               rounded-3xl
               border
               border-gray-100
@@ -242,35 +323,151 @@ export default function UploadComplete({
               ギャラリーへ追加しました
             </p>
           </motion.div>
-        </div>
 
-        {/* ボタン */}
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 20,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 1.1,
-          }}
-          className="
-            mx-auto
-            w-full
-            max-w-sm
-            space-y-3
-          "
-        >
-          {/* ギャラリー */}
-          <motion.div whileTap={{ scale: 0.96 }}>
-            <Link
-              href={`/e/${eventToken}/photos`}
+          {/* 共有する写真 */}
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 20,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              delay: 1.1,
+            }}
+            className="
+              mt-6
+              w-full
+            "
+          >
+            <p
+              className="
+                mb-3
+                text-center
+                text-sm
+                font-semibold
+                text-gray-900
+              "
+            >
+              共有する写真を選択
+            </p>
+
+            {/* 写真グリッド */}
+            <div
+              className="
+                grid
+                w-full
+                grid-cols-5
+                gap-1.5
+              "
+            >
+              {previewUrls.map((src, index) => {
+                const isSelected =
+                  selectedIndexes.includes(index);
+
+                return (
+                  <button
+                    key={src}
+                    type="button"
+                    onClick={() => togglePhoto(index)}
+                    className="
+                      relative
+                      aspect-square
+                      overflow-hidden
+                      rounded-xl
+                      bg-gray-100
+                    "
+                  >
+                    <img
+                      src={src}
+                      alt={`photo-${index + 1}`}
+                      className="
+                        h-full
+                        w-full
+                        object-cover
+                      "
+                    />
+
+                    {isSelected && (
+                      <div
+                        className="
+                          absolute
+                          inset-0
+                          bg-black/20
+                        "
+                      >
+                        <div
+                          className="
+                            absolute
+                            right-2
+                            top-2
+                            flex
+                            h-7
+                            w-7
+                            items-center
+                            justify-center
+                            rounded-full
+                            bg-black
+                            text-sm
+                            font-bold
+                            text-white
+                            shadow
+                          "
+                        >
+                          ✓
+                        </div>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <p
+              className="
+                mt-3
+                text-center
+                text-xs
+                text-gray-400
+              "
+            >
+              {selectedIndexes.length}枚選択中
+            </p>
+          </motion.div>
+
+          {/* アクションボタン */}
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 20,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              delay: 1.2,
+            }}
+            className="
+              mt-6
+              mb-2
+              w-full
+              space-y-3
+            "
+          >
+            {/* 共有 */}
+            <motion.button
+              whileTap={{
+                scale: 0.96,
+              }}
+              onClick={handleShare}
+              disabled={selectedIndexes.length === 0}
               className="
                 flex
                 h-14
+                w-full
                 items-center
                 justify-center
                 gap-2.5
@@ -283,52 +480,53 @@ export default function UploadComplete({
                 transition
                 hover:bg-gray-800
                 active:scale-[0.98]
+                disabled:cursor-not-allowed
+                disabled:bg-gray-200
+                disabled:text-gray-400
               "
             >
-              <Images
-                size={20}
-                strokeWidth={2}
-              />
-              ギャラリーを見る
-            </Link>
-          </motion.div>
+              <Share2 size={20} />
+              選択した写真を共有
+            </motion.button>
 
-          {/* もう一度送る */}
-          <motion.button
-            whileTap={{
-              scale: 0.96,
-            }}
-            onClick={onRetryUpload}
-            className="
-              flex
-              h-12
-              w-full
-              items-center
-              justify-center
-              gap-2
-              rounded-xl
-              border
-              border-gray-200
-              bg-white
-              text-sm
-              font-semibold
-              text-gray-700
-              shadow-sm
-              transition
-              hover:bg-gray-50
-            "
-          >
-            <Upload size={18} />
-            もう一度写真を送る
-          </motion.button>
+            {/* ギャラリー */}
+            <motion.div whileTap={{ scale: 0.96 }}>
+              <Link
+                href={`/e/${eventToken}/photos`}
+                className="
+                  flex
+                  h-14
+                  w-full
+                  items-center
+                  justify-center
+                  gap-2.5
+                  rounded-2xl
+                  border
+                  border-gray-200
+                  bg-white
+                  text-sm
+                  font-semibold
+                  text-gray-700
+                  shadow-sm
+                  transition
+                  hover:bg-gray-50
+                  active:scale-[0.98]
+                "
+              >
+                <Images
+                  size={20}
+                  strokeWidth={2}
+                />
+                ギャラリーを見る
+              </Link>
+            </motion.div>
 
-          {/* トップへ戻る */}
-          <motion.div whileTap={{ scale: 0.96 }}>
-            <button
-              type="button"
-              onClick={() => {
-                window.location.href = `/e/${eventToken}`;
+            {/* もう一度送る */}
+            <motion.button
+              whileTap={{
+                scale: 0.96,
               }}
+              onClick={onRetryUpload}
               className="
                 flex
                 h-12
@@ -337,25 +535,55 @@ export default function UploadComplete({
                 justify-center
                 gap-2
                 rounded-xl
+                border
+                border-gray-200
+                bg-white
                 text-sm
-                font-medium
-                text-gray-500
+                font-semibold
+                text-gray-700
+                shadow-sm
                 transition
                 hover:bg-gray-50
-                hover:text-gray-700
-                active:scale-[0.98]
               "
             >
-              <Home
-                size={18}
-                strokeWidth={2}
-              />
-              トップに戻る
-            </button>
+              <Upload size={18} />
+              もう一度写真を送る
+            </motion.button>
+
+            {/* トップ */}
+            <motion.div whileTap={{ scale: 0.96 }}>
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = `/e/${eventToken}`;
+                }}
+                className="
+                  flex
+                  h-12
+                  w-full
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-xl
+                  text-sm
+                  font-medium
+                  text-gray-500
+                  transition
+                  hover:bg-gray-50
+                  hover:text-gray-700
+                  active:scale-[0.98]
+                "
+              >
+                <Home
+                  size={18}
+                  strokeWidth={2}
+                />
+                トップに戻る
+              </button>
+            </motion.div>
           </motion.div>
-          
         </motion.div>
-      </motion.div>
+      </div>
     </div>
   );
 }
