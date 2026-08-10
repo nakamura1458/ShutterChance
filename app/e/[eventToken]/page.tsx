@@ -34,7 +34,7 @@ export default async function EventPage({ params }: Props) {
         {/* Header */}
         <section className="py-8 text-center">
           <p className="text-sm text-muted-foreground">
-            Photo Sharing
+            Shutter Chance
           </p>
 
           <h1 className="mt-2 text-4xl font-bold tracking-tight">
