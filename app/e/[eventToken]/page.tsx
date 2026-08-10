@@ -2,7 +2,7 @@ import { getEventByToken } from "@/services/event.service";
 import { getPhotos } from "@/services/photo.service";
 import PhotoPageClient from "@/components/photo/PhotoPageClient";
 import Link from "next/link";
-import { Link as LinkIcon } from "lucide-react";
+import { Link as LinkIcon, CircleHelp } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +33,7 @@ export default async function EventPage({ params }: Props) {
     <main className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-6xl space-y-8 px-4 py-8">
         {/* Event Header */}
-        <section className="py-12 text-center sm:py-16">
+        <section className="pt-10 pb-6 text-center sm:pt-8 sm:pb-8">
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-gray-400">
             Shutter Chance
           </p>
@@ -43,14 +43,28 @@ export default async function EventPage({ params }: Props) {
           </h1>
         </section>
 
-        <Link
-          href={`/share/${eventToken}`}
-          aria-label="イベントを共有"
-          className="fixed right-5 top-5 z-40 inline-flex items-center gap-2 rounded-full bg-black px-4 py-3 text-sm font-medium text-white shadow-md transition hover:bg-gray-800 active:scale-95"
-        >
-          <LinkIcon className="h-4 w-4" />
-          <span>共有</span>
-        </Link>
+        {/* Action Buttons */}
+        <div className="fixed right-4 top-2 z-40 flex items-center gap-2">
+          {/* Guide */}
+          <Link
+            href={`/e/${eventToken}/guide`}
+            aria-label="ShutterChanceの使い方"
+            className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-medium text-gray-900 shadow-md ring-1 ring-gray-200 transition hover:bg-gray-50 active:scale-95"
+          >
+            <CircleHelp className="h-4 w-4" />
+            <span>使い方</span>
+          </Link>
+
+          {/* Share */}
+          <Link
+            href={`/share/${eventToken}`}
+            aria-label="イベントを共有"
+            className="inline-flex items-center gap-2 rounded-full bg-black px-4 py-3 text-sm font-medium text-white shadow-md transition hover:bg-gray-800 active:scale-95"
+          >
+            <LinkIcon className="h-4 w-4" />
+            <span>共有</span>
+          </Link>
+        </div>
 
         <PhotoPageClient
           eventId={event.id}
