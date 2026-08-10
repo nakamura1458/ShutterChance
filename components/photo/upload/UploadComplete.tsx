@@ -351,7 +351,7 @@ export default function UploadComplete({
                 text-gray-900
               "
             >
-              共有する写真を選択
+              保存する画像を選択
             </p>
 
             {/* 写真グリッド */}
@@ -486,7 +486,7 @@ export default function UploadComplete({
               "
             >
               <Share2 size={20} />
-              選択した写真を共有
+              選択した写真を保存
             </motion.button>
 
             {/* ギャラリー */}
