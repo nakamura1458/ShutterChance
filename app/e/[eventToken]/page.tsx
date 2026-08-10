@@ -2,6 +2,7 @@ import { getEventByToken } from "@/services/event.service";
 import { getPhotos } from "@/services/photo.service";
 import PhotoPageClient from "@/components/photo/PhotoPageClient";
 import Link from "next/link";
+import { Link as LinkIcon } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -31,30 +32,25 @@ export default async function EventPage({ params }: Props) {
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-6xl space-y-8 px-4 py-8">
-        {/* Header */}
-        <section className="py-8 text-center">
-          <p className="text-sm text-muted-foreground">
+        {/* Event Header */}
+        <section className="py-12 text-center sm:py-16">
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
             Shutter Chance
           </p>
 
-          <h1 className="mt-2 text-4xl font-bold tracking-tight">
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
             {event.name}
           </h1>
-
-          <p className="mt-4 text-muted-foreground">
-            思い出をみんなで共有しましょう
-          </p>
         </section>
 
-        {/* イベントをシェア */}
-        <div className="flex justify-center">
-          <Link
-            href={`/share/${eventToken}`}
-            className="flex items-center justify-center gap-2 rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
-          >
-            📤 このイベントをシェア
-          </Link>
-        </div>
+        <Link
+          href={`/share/${eventToken}`}
+          aria-label="イベントを共有"
+          className="fixed right-5 top-5 z-40 inline-flex items-center gap-2 rounded-full bg-black px-4 py-3 text-sm font-medium text-white shadow-md transition hover:bg-gray-800 active:scale-95"
+        >
+          <LinkIcon className="h-4 w-4" />
+          <span>共有</span>
+        </Link>
 
         <PhotoPageClient
           eventId={event.id}
