@@ -28,7 +28,7 @@ export default async function SharePage({ params }: Props) {
       <div className="mx-auto max-w-md">
         <div className="text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-gray-400">
-            ShutterChance
+            Shutter Chance
           </p>
 
           <h1 className="mt-4 text-3xl font-bold tracking-tight">

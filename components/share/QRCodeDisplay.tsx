@@ -60,7 +60,7 @@ export default function QRCodeDisplay({ guestUrl }: Props) {
         })
       ) {
         await navigator.share({
-          title: "ShutterChance",
+          title: "Shutter Chance",
           text: "結婚式の写真投稿用QRカード",
           files: [file],
         });
@@ -71,7 +71,7 @@ export default function QRCodeDisplay({ guestUrl }: Props) {
       // ファイル共有非対応の場合はURL共有
       if (navigator.share) {
         await navigator.share({
-          title: "ShutterChance",
+          title: "Shutter Chance",
           text: "結婚式の写真を送ってね！",
           url: guestUrl,
         });

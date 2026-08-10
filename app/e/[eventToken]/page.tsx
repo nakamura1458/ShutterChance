@@ -34,7 +34,7 @@ export default async function EventPage({ params }: Props) {
       <div className="mx-auto max-w-6xl space-y-8 px-4 py-8">
         {/* Event Header */}
         <section className="py-12 text-center sm:py-16">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-gray-400">
             Shutter Chance
           </p>
 
