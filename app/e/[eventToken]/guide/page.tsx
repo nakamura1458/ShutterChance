@@ -24,7 +24,7 @@ export default async function GuidePage({ params }: Props) {
     <main className="min-h-screen bg-zinc-50">
       {/* Header */}
       <header className="sticky top-0 z-20 border-b border-zinc-200/80 bg-zinc-50/90 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-2xl items-center px-4">
+        <div className="mx-auto flex h-15 max-w-2xl items-center px-4">
           <Link
             href={`/e/${eventToken}`}
             className="flex items-center gap-1.5 text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-950"
