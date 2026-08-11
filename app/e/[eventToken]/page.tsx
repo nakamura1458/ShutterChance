@@ -2,7 +2,10 @@ import { getEventByToken } from "@/services/event.service";
 import { getPhotos } from "@/services/photo.service";
 import PhotoPageClient from "@/components/photo/PhotoPageClient";
 import Link from "next/link";
-import { Link as LinkIcon, CircleHelp } from "lucide-react";
+import {
+  Link as LinkIcon,
+  CircleHelp,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +15,9 @@ type Props = {
   }>;
 };
 
-export default async function EventPage({ params }: Props) {
+export default async function EventPage({
+  params,
+}: Props) {
   const { eventToken } = await params;
 
   const event = await getEventByToken(eventToken);
@@ -29,6 +34,24 @@ export default async function EventPage({ params }: Props) {
 
   const photos = await getPhotos(event.id);
 
+  // ----------------------------------------
+  // 写真アップロード上限
+  // ----------------------------------------
+
+  const currentPhotoCount = photos.length;
+
+  const isAdminEvent =
+    event.user_id ===
+    process.env.SHUTTERCHANCE_ADMIN_USER_ID;
+
+  const remainingPhotos = isAdminEvent
+    ? null
+    : Math.max(
+        event.max_upload_count -
+          currentPhotoCount,
+        0,
+      );
+
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-6xl space-y-8 px-4 py-8">
@@ -41,6 +64,30 @@ export default async function EventPage({ params }: Props) {
           <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
             {event.name}
           </h1>
+
+          {/* ---------------------------------------- */}
+          {/* Upload Limit */}
+          {/* ---------------------------------------- */}
+
+          <div className="mt-4">
+            {isAdminEvent ? (
+              <p className="text-sm text-gray-500">
+                写真のアップロード枚数に制限はありません
+              </p>
+            ) : remainingPhotos === 0 ? (
+              <p className="text-sm font-medium text-red-500">
+                写真のアップロード上限に達しています
+              </p>
+            ) : (
+              <p className="text-sm text-gray-500">
+                あと{" "}
+                <span className="font-semibold text-gray-900">
+                  {remainingPhotos}枚
+                </span>{" "}
+                アップロードできます
+              </p>
+            )}
+          </div>
         </section>
 
         {/* Action Buttons */}

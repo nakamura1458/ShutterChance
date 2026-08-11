@@ -3,7 +3,8 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { supabase } from "@/lib/supabase/client";
+import { createEvent } from "@/actions/event.actions";
+import type { EventPlan } from "@/lib/event-plan";
 
 function getMinDateTime() {
   const now = new Date();
@@ -19,15 +20,13 @@ function getMinDateTime() {
 
 export default function NewEventPage() {
   const router = useRouter();
+  const [plan, setPlan] = useState<EventPlan>("free");
 
   // ----------------------------------------
   // 基本情報
   // ----------------------------------------
 
   const [name, setName] = useState("");
-
-  const [maxUploadCount, setMaxUploadCount] =
-    useState("30");
 
   // ----------------------------------------
   // 写真アップロード期限
@@ -72,19 +71,6 @@ export default function NewEventPage() {
 
     if (!trimmedName) {
       setError("イベント名を入力してください。");
-      setLoading(false);
-      return;
-    }
-
-    const uploadCount = Number(maxUploadCount);
-
-    if (
-      !Number.isInteger(uploadCount) ||
-      uploadCount < 1
-    ) {
-      setError(
-        "アップロード枚数は1以上で指定してください。",
-      );
       setLoading(false);
       return;
     }
@@ -138,69 +124,51 @@ export default function NewEventPage() {
     }
 
     // ----------------------------------------
-    // ログインユーザー取得
-    // ----------------------------------------
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      router.push("/login");
-      return;
-    }
-
-    // ----------------------------------------
-    // イベントトークン生成
-    // ----------------------------------------
-
-    const eventToken = crypto.randomUUID();
-
-    // ----------------------------------------
     // イベント作成
     // ----------------------------------------
 
-    const { error: insertError } = await supabase
-      .from("events")
-      .insert({
+    try {
+      await createEvent({
         name: trimmedName,
-        event_token: eventToken,
-        user_id: user.id,
 
-        max_upload_count: uploadCount,
+        // ----------------------------------------
+        // Step 2-2ではFREE固定
+        // Step 2-3で料金プラン選択に変更
+        // ----------------------------------------
 
-        upload_deadline:
+        plan,
+
+        uploadDeadline:
           hasUploadDeadline && uploadDeadline
             ? new Date(
                 uploadDeadline,
               ).toISOString()
             : null,
 
-        event_deadline:
+        eventDeadline:
           hasEventDeadline && eventDeadline
             ? new Date(
                 eventDeadline,
               ).toISOString()
             : null,
-
-        is_public: true,
-        allow_guest_download: true,
       });
 
-    if (insertError) {
-      console.error(insertError);
+      // ----------------------------------------
+      // ダッシュボードへ
+      // ----------------------------------------
 
-      setError(insertError.message);
+      router.push("/dashboard");
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "イベントの作成に失敗しました。",
+      );
+
       setLoading(false);
-      return;
     }
-
-    // ----------------------------------------
-    // ダッシュボードへ
-    // ----------------------------------------
-
-    router.push("/dashboard");
   }
 
   const minDateTime = getMinDateTime();
@@ -260,32 +228,96 @@ export default function NewEventPage() {
             </div>
 
             {/* ---------------------------------------- */}
-            {/* 最大アップロード枚数 */}
+            {/* 料金プラン */}
             {/* ---------------------------------------- */}
 
             <div>
-              <label
-                htmlFor="max-upload-count"
-                className="mb-2 block text-sm font-medium text-gray-900"
-              >
-                1人あたりのアップロード枚数
+              <label className="mb-3 block text-sm font-medium text-gray-900">
+                料金プラン
               </label>
 
-              <input
-                id="max-upload-count"
-                type="number"
-                min={1}
-                value={maxUploadCount}
-                onChange={(event) =>
-                  setMaxUploadCount(
-                    event.target.value,
-                  )
-                }
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-black"
-              />
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setPlan("free")}
+                  className={`w-full rounded-xl border p-4 text-left transition ${
+                    plan === "free"
+                      ? "border-black bg-gray-50"
+                      : "border-gray-200 hover:border-gray-400"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold">
+                        FREE
+                      </p>
+
+                      <p className="mt-1 text-sm text-gray-500">
+                        30枚まで
+                      </p>
+                    </div>
+
+                    <p className="font-semibold">
+                      0円
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPlan("standard")}
+                  className={`w-full rounded-xl border p-4 text-left transition ${
+                    plan === "standard"
+                      ? "border-black bg-gray-50"
+                      : "border-gray-200 hover:border-gray-400"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold">
+                        STANDARD
+                      </p>
+
+                      <p className="mt-1 text-sm text-gray-500">
+                        300枚まで
+                      </p>
+                    </div>
+
+                    <p className="font-semibold">
+                      2,490円
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPlan("plus")}
+                  className={`w-full rounded-xl border p-4 text-left transition ${
+                    plan === "plus"
+                      ? "border-black bg-gray-50"
+                      : "border-gray-200 hover:border-gray-400"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold">
+                        PLUS
+                      </p>
+
+                      <p className="mt-1 text-sm text-gray-500">
+                        1,000枚まで
+                      </p>
+                    </div>
+
+                    <p className="font-semibold">
+                      4,980円
+                    </p>
+                  </div>
+                </button>
+              </div>
 
               <p className="mt-2 text-xs text-gray-400">
-                ゲスト1人がアップロードできる写真の最大枚数です。
+                イベントごとに料金が発生します。
               </p>
             </div>
 

@@ -13,21 +13,23 @@ import {
 import Link from "next/link";
 
 type Props = {
-  photos: File[];
+  uploadedPhotos: File[];
   eventToken: string;
   onRetryUpload: () => void;
 };
 
 export default function UploadComplete({
-  photos,
+  uploadedPhotos,
   eventToken,
   onRetryUpload,
 }: Props) {
-  const [selectedIndexes, setSelectedIndexes] = useState<number[]>(
-    []
-  );
+  const [selectedIndexes, setSelectedIndexes] =
+    useState<number[]>([]);
 
-  // 🎉 完了演出
+  // ----------------------------------------
+  // 完了演出
+  // ----------------------------------------
+
   useEffect(() => {
     const timer = setTimeout(() => {
       confetti({
@@ -47,12 +49,20 @@ export default function UploadComplete({
     };
   }, []);
 
+  // ----------------------------------------
   // プレビューURL生成
-  const previewUrls = useMemo(() => {
-    return photos.map((photo) => URL.createObjectURL(photo));
-  }, [photos]);
+  // ----------------------------------------
 
+  const previewUrls = useMemo(() => {
+    return uploadedPhotos.map((photo) =>
+      URL.createObjectURL(photo),
+    );
+  }, [uploadedPhotos]);
+
+  // ----------------------------------------
   // プレビューURL解放
+  // ----------------------------------------
+
   useEffect(() => {
     return () => {
       previewUrls.forEach((url) => {
@@ -61,7 +71,10 @@ export default function UploadComplete({
     };
   }, [previewUrls]);
 
+  // ----------------------------------------
   // 写真の選択 / 選択解除
+  // ----------------------------------------
+
   const togglePhoto = (index: number) => {
     setSelectedIndexes((prev) => {
       if (prev.includes(index)) {
@@ -72,18 +85,26 @@ export default function UploadComplete({
     });
   };
 
+  // ----------------------------------------
   // 写真を共有
+  // ----------------------------------------
+
   const handleShare = async () => {
     const selectedPhotos = selectedIndexes
-      .map((index) => photos[index])
-      .filter((photo): photo is File => Boolean(photo));
+      .map((index) => uploadedPhotos[index])
+      .filter(
+        (photo): photo is File =>
+          Boolean(photo),
+      );
 
     if (selectedPhotos.length === 0) {
       return;
     }
 
     if (!navigator.share) {
-      alert("この端末では写真の共有に対応していません。");
+      alert(
+        "この端末では写真の共有に対応していません。",
+      );
       return;
     }
 
@@ -94,7 +115,9 @@ export default function UploadComplete({
         }) ?? false;
 
       if (!canShareFiles) {
-        alert("この端末では写真の共有に対応していません。");
+        alert(
+          "この端末では写真の共有に対応していません。",
+        );
         return;
       }
 
@@ -110,7 +133,10 @@ export default function UploadComplete({
         return;
       }
 
-      console.error("写真の共有に失敗しました:", error);
+      console.error(
+        "写真の共有に失敗しました:",
+        error,
+      );
 
       alert("写真の共有に失敗しました。");
     }
@@ -128,7 +154,10 @@ export default function UploadComplete({
         bg-white
       "
     >
-      {/* 画面全体のスクロール領域 */}
+      {/* ---------------------------------------- */}
+      {/* スクロール領域 */}
+      {/* ---------------------------------------- */}
+
       <div
         className="
           h-full
@@ -160,7 +189,10 @@ export default function UploadComplete({
             items-center
           "
         >
+          {/* ---------------------------------------- */}
           {/* 完了アイコン */}
+          {/* ---------------------------------------- */}
+
           <motion.div
             initial={{
               scale: 0,
@@ -196,7 +228,10 @@ export default function UploadComplete({
             />
           </motion.div>
 
+          {/* ---------------------------------------- */}
           {/* メッセージ */}
+          {/* ---------------------------------------- */}
+
           <motion.div
             initial={{
               opacity: 0,
@@ -235,7 +270,10 @@ export default function UploadComplete({
             </p>
           </motion.div>
 
-          {/* 写真共有カード */}
+          {/* ---------------------------------------- */}
+          {/* 写真カード */}
+          {/* ---------------------------------------- */}
+
           <motion.div
             initial={{
               opacity: 0,
@@ -260,51 +298,57 @@ export default function UploadComplete({
             "
           >
             <div className="relative mx-auto h-40 w-56">
-              {previewUrls.slice(0, 3).map((src, index) => (
-                <motion.img
-                  key={src}
-                  src={src}
-                  alt={`preview-${index}`}
-                  initial={{
-                    opacity: 0,
-                    y: 20,
-                    rotate: 0,
-                    scale: 0.9,
-                  }}
-                  animate={{
-                    opacity: 1,
-                    y: 0,
-                    rotate: (index - 1) * 8,
-                    scale: 1,
-                  }}
-                  whileHover={{
-                    scale: 1.03,
-                  }}
-                  transition={{
-                    delay: 0.9 + index * 0.15,
-                    type: "spring",
-                    stiffness: 180,
-                  }}
-                  className="
-                    absolute
-                    left-1/2
-                    h-40
-                    w-32
-                    -translate-x-1/2
-                    rounded-2xl
-                    border
-                    border-white
-                    object-cover
-                    shadow-xl
-                  "
-                  style={{
-                    transform: `translateX(calc(-50% + ${
-                      (index - 1) * 28
-                    }px)) rotate(${(index - 1) * 8}deg)`,
-                    zIndex: index,
-                  }}
-                />
-              ))}
+              {previewUrls
+                .slice(0, 3)
+                .map((src, index) => (
+                  <motion.img
+                    key={src}
+                    src={src}
+                    alt={`preview-${index}`}
+                    initial={{
+                      opacity: 0,
+                      y: 20,
+                      rotate: 0,
+                      scale: 0.9,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      rotate:
+                        (index - 1) * 8,
+                      scale: 1,
+                    }}
+                    whileHover={{
+                      scale: 1.03,
+                    }}
+                    transition={{
+                      delay:
+                        0.9 + index * 0.15,
+                      type: "spring",
+                      stiffness: 180,
+                    }}
+                    className="
+                      absolute
+                      left-1/2
+                      h-40
+                      w-32
+                      -translate-x-1/2
+                      rounded-2xl
+                      border
+                      border-white
+                      object-cover
+                      shadow-xl
+                    "
+                    style={{
+                      transform: `translateX(calc(-50% + ${
+                        (index - 1) * 28
+                      }px)) rotate(${
+                        (index - 1) * 8
+                      }deg)`,
+                      zIndex: index,
+                    }}
+                  />
+                ))}
             </div>
 
             <p
@@ -316,7 +360,7 @@ export default function UploadComplete({
               "
             >
               <span className="font-semibold text-gray-900">
-                {photos.length}枚
+                {uploadedPhotos.length}枚
               </span>
               の写真を
               <br />
@@ -324,7 +368,10 @@ export default function UploadComplete({
             </p>
           </motion.div>
 
+          {/* ---------------------------------------- */}
           {/* 共有する写真 */}
+          {/* ---------------------------------------- */}
+
           <motion.div
             initial={{
               opacity: 0,
@@ -365,13 +412,17 @@ export default function UploadComplete({
             >
               {previewUrls.map((src, index) => {
                 const isSelected =
-                  selectedIndexes.includes(index);
+                  selectedIndexes.includes(
+                    index,
+                  );
 
                 return (
                   <button
                     key={src}
                     type="button"
-                    onClick={() => togglePhoto(index)}
+                    onClick={() =>
+                      togglePhoto(index)
+                    }
                     className="
                       relative
                       aspect-square
@@ -437,7 +488,10 @@ export default function UploadComplete({
             </p>
           </motion.div>
 
+          {/* ---------------------------------------- */}
           {/* アクションボタン */}
+          {/* ---------------------------------------- */}
+
           <motion.div
             initial={{
               opacity: 0,
@@ -463,7 +517,9 @@ export default function UploadComplete({
                 scale: 0.96,
               }}
               onClick={handleShare}
-              disabled={selectedIndexes.length === 0}
+              disabled={
+                selectedIndexes.length === 0
+              }
               className="
                 flex
                 h-14
@@ -555,7 +611,8 @@ export default function UploadComplete({
               <button
                 type="button"
                 onClick={() => {
-                  window.location.href = `/e/${eventToken}`;
+                  window.location.href =
+                    `/e/${eventToken}`;
                 }}
                 className="
                   flex

@@ -1,15 +1,22 @@
 import { createClient } from "@/lib/supabase/server";
 
-export async function getEventByToken(eventToken: string) {
+export async function getEventByToken(
+  eventToken: string,
+) {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("events")
     .select("*")
     .eq("event_token", eventToken)
-    .single();
+    .maybeSingle();
 
   if (error) {
+    console.error(
+      "getEventByToken error:",
+      error,
+    );
+
     throw error;
   }
 
@@ -31,7 +38,9 @@ export async function getMyEvents() {
     .from("events")
     .select("*")
     .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", {
+      ascending: false,
+    });
 
   if (error) {
     throw error;
@@ -58,9 +67,14 @@ export async function getMyEventByToken(
     .select("*")
     .eq("event_token", eventToken)
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
   if (error) {
+    console.error(
+      "getMyEventByToken error:",
+      error,
+    );
+
     return null;
   }
 

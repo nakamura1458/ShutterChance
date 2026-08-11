@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+
 // components
 import PhotoScreen from "./PhotoScreen";
 import UploadStartCard from "./start/UploadStartCard";
@@ -8,9 +10,6 @@ import ImagePicker from "./picker/ImagePicker";
 // hooks
 import { useGuestName } from "@/hooks/useGuestName";
 import { usePhotoFlow } from "@/hooks/usePhotoFlow";
-
-// 装飾系
-import { useEffect, useState, useRef } from "react";
 
 type Props = {
   eventId: string;
@@ -23,24 +22,51 @@ export default function PhotoUpload({
   eventToken,
   onUploadSuccess,
 }: Props) {
-  const [selected, setSelected] = useState(false);
+  // ----------------------------------------
+  // Photo Flow
+  // ----------------------------------------
 
   const flow = usePhotoFlow({
     eventId,
     eventToken,
   });
 
-  const imagePickerRef = useRef<HTMLInputElement>(null);
+  // ----------------------------------------
+  // UI State
+  // ----------------------------------------
 
-  const { guestName, saveGuestName, clearGuestName } = useGuestName(eventToken);
+  const [selected, setSelected] = useState(false);
 
-  const [guestNameDraft, setGuestNameDraft] = useState("");
+  const [guestNameDraft, setGuestNameDraft] =
+    useState("");
 
-  const [uploadedPhotos, setUploadedPhotos] = useState<File[]>([]);
+  const [uploadedPhotos, setUploadedPhotos] =
+    useState<File[]>([]);
+
+  // ----------------------------------------
+  // Refs
+  // ----------------------------------------
+
+  const imagePickerRef =
+    useRef<HTMLInputElement>(null);
+
+  // ----------------------------------------
+  // Guest Name
+  // ----------------------------------------
+
+  const {
+    guestName,
+    saveGuestName,
+    clearGuestName,
+  } = useGuestName(eventToken);
 
   useEffect(() => {
     setGuestNameDraft(guestName);
   }, [guestName]);
+
+  // ----------------------------------------
+  // 写真選択
+  // ----------------------------------------
 
   const handleSelectPhoto = (files: File[]) => {
     if (!selected) {
@@ -52,6 +78,10 @@ export default function PhotoUpload({
     flow.actions.addPhotos(files);
   };
 
+  // ----------------------------------------
+  // Picker
+  // ----------------------------------------
+
   const openPicker = () => {
     imagePickerRef.current?.click();
   };
@@ -61,36 +91,95 @@ export default function PhotoUpload({
     imagePickerRef.current?.click();
   };
 
+  // ----------------------------------------
+  // Upload
+  // ----------------------------------------
+
   const handleUpload = async () => {
+    const name = guestNameDraft.trim();
 
-    const name = guestName.trim();
-
-    const success = await flow.actions.upload(name);
-
-    if (!success) {
-      alert(flow.state.error?.message ?? "送信失敗");
+    if (!name) {
+      alert("名前を入力してください。");
       return;
     }
 
-    setUploadedPhotos(flow.state.photos);
+    // ----------------------------------------
+    // アップロード
+    // ----------------------------------------
+
+    const result = await flow.actions.upload(name);
+
+    // ----------------------------------------
+    // 全失敗
+    // ----------------------------------------
+
+    if (result.uploadedPhotos.length === 0) {
+      alert(
+        result.error?.message ??
+          "写真の送信に失敗しました。",
+      );
+
+      return;
+    }
+
+    // ----------------------------------------
+    // 実際に成功した写真だけ保持
+    // ----------------------------------------
+
+    setUploadedPhotos(result.uploadedPhotos);
+
+    // ----------------------------------------
+    // 選択中の写真をクリア
+    // ----------------------------------------
 
     flow.actions.clearSelectedPhotos();
+
+    // ----------------------------------------
+    // 一部失敗
+    // ----------------------------------------
+
+    if (result.failedPhotos.length > 0) {
+      alert(
+        `${result.uploadedPhotos.length}枚アップロードしました。\n` +
+          `${result.failedPhotos.length}枚はアップロードできませんでした。`,
+      );
+    }
+
+    // ----------------------------------------
+    // 完了
+    // ----------------------------------------
 
     onUploadSuccess?.();
   };
 
+  // ----------------------------------------
+  // 写真選択をクリア
+  // ----------------------------------------
+
   const handleClear = () => {
     flow.actions.clearPhotos();
     setSelected(false);
+    setUploadedPhotos([]);
   };
+
+  // ----------------------------------------
+  // Render
+  // ----------------------------------------
 
   return (
     <>
-      {/* ← 常に存在させる */}
+      {/* ----------------------------------------
+          Image Picker
+      ---------------------------------------- */}
+
       <ImagePicker
         ref={imagePickerRef}
         onSelect={handleSelectPhoto}
       />
+
+      {/* ----------------------------------------
+          Photo Selection / Upload
+      ---------------------------------------- */}
 
       {selected ? (
         <PhotoScreen

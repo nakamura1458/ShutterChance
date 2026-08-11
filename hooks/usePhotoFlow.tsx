@@ -22,29 +22,48 @@ export function usePhotoFlow({
   });
 
   const [status, setStatus] = useState<
-    "idle" | "uploading" | "success" | "error"
+    "idle" | "uploading" | "success" | "partial" | "error"
   >("idle");
 
-
   async function handleUpload(
-    guestName = "ゲスト"
+    guestName = "ゲスト",
   ) {
     setStatus("uploading");
 
-    const success = await upload.actions.upload({
-      guestName,
-      photos: photo.state.photos,
-    });
+    const result =
+      await upload.actions.upload({
+        guestName,
+        photos: photo.state.photos,
+      });
 
-    if (!success) {
-      setStatus("error");
-      return false;
+    // ----------------------------------------
+    // 完全成功
+    // ----------------------------------------
+
+    if (result.success) {
+      setStatus("success");
+
+      return result;
     }
 
-    setStatus("success");
-    return true;
-  }
+    // ----------------------------------------
+    // 一部成功
+    // ----------------------------------------
 
+    if (result.uploadedPhotos.length > 0) {
+      setStatus("partial");
+
+      return result;
+    }
+
+    // ----------------------------------------
+    // 全失敗
+    // ----------------------------------------
+
+    setStatus("error");
+
+    return result;
+  }
 
   function clearPhotos() {
     photo.actions.clearPhotos();
@@ -77,15 +96,16 @@ export function usePhotoFlow({
       // 1枚削除
       removePhoto: photo.actions.removePhoto,
 
-      // クリア
+      // 写真をクリア
       clearPhotos,
 
+      // アップロード後に選択写真をクリア
       clearSelectedPhotos,
 
-      // アップロード状態リセット
+      // アップロード状態をリセット
       resetStatus,
 
-      // upload
+      // アップロード
       upload: handleUpload,
     },
   };
