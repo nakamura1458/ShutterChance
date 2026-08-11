@@ -1,6 +1,8 @@
-import { supabase } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function getPhotos(eventId: string) {
+  const supabase = await createClient();
+
   const { data, error } = await supabase
     .from("photos")
     .select("*")
@@ -25,6 +27,8 @@ export async function getPhotosPaginated(
   page: number,
   pageSize: number = 60
 ) {
+  const supabase = await createClient();
+
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
