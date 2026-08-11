@@ -43,8 +43,7 @@ export async function checkEventToken(
 type UpdateEventSettingsInput = {
   eventId: string;
   name: string;
-  maxUploadCount: number;
-  uploadDeadline: string | null;
+  eventStartAt: string;
   eventDeadline: string | null;
   isPublic: boolean;
   allowGuestDownload: boolean;
@@ -63,34 +62,83 @@ export async function updateEventSettings(
     throw new Error("Unauthorized");
   }
 
+  // ----------------------------------------
+  // イベント取得
+  // ----------------------------------------
+
+  const { data: event, error: eventError } =
+    await supabase
+      .from("events")
+      .select("id, plan, user_id")
+      .eq("id", input.eventId)
+      .eq("user_id", user.id)
+      .single();
+
+  if (eventError || !event) {
+    throw new Error("イベントが見つかりません。");
+  }
+
+  // ----------------------------------------
+  // プラン取得
+  // ----------------------------------------
+
+  const { data: plan, error: planError } =
+    await supabase
+      .from("event_plans")
+      .select(
+        "id, max_upload_count, retention_days",
+      )
+      .eq("id", event.plan)
+      .eq("is_active", true)
+      .single();
+
+  if (planError || !plan) {
+    throw new Error(
+      "イベントプランを取得できませんでした。",
+    );
+  }
+
+  // ----------------------------------------
+  // 基本バリデーション
+  // ----------------------------------------
+
   const name = input.name.trim();
 
   if (!name) {
-    throw new Error("イベント名を入力してください。");
-  }
-
-  if (
-    !Number.isInteger(input.maxUploadCount) ||
-    input.maxUploadCount < 1
-  ) {
     throw new Error(
-      "アップロード枚数は1以上で指定してください。",
+      "イベント名を入力してください。",
     );
   }
+
+  // ----------------------------------------
+  // イベント設定更新
+  // ----------------------------------------
 
   const { error } = await supabase
     .from("events")
     .update({
       name,
-      max_upload_count: input.maxUploadCount,
-      upload_deadline: input.uploadDeadline,
-      event_deadline: input.eventDeadline,
+
+      max_upload_count: plan.max_upload_count,
+      
+      retention_days: plan.retention_days,
+
+      event_start_at: dateToJSTStartOfDay(
+        input.eventStartAt,
+      ),
+
+      event_deadline:
+        input.eventDeadline
+          ? dateToJSTEndOfDay(
+              input.eventDeadline,
+            )
+          : null,
+
       is_public: input.isPublic,
+
       allow_guest_download: input.allowGuestDownload,
     })
-    .eq("id", input.eventId)
-    .eq("user_id", user.id);
-
+  
   if (error) {
     throw error;
   }
@@ -100,10 +148,26 @@ export async function updateEventSettings(
   };
 }
 
+function dateToJSTStartOfDay(
+  date: string,
+) {
+  return new Date(
+    `${date}T00:00:00+09:00`,
+  ).toISOString();
+}
+
+function dateToJSTEndOfDay(
+  date: string,
+) {
+  return new Date(
+    `${date}T23:59:59.999+09:00`,
+  ).toISOString();
+}
+
 type CreateEventInput = {
   name: string;
-  plan: "free" | "standard" | "plus";
-  uploadDeadline: string | null;
+  plan: string;
+  eventStartAt: string;
   eventDeadline: string | null;
 };
 
@@ -131,26 +195,32 @@ export async function createEvent(
   const name = input.name.trim();
 
   if (!name) {
-    throw new Error("イベント名を入力してください。");
-  }
-
-  if (
-    input.plan !== "free" &&
-    input.plan !== "standard" &&
-    input.plan !== "plus"
-  ) {
-    throw new Error("不正なプランです。");
+    throw new Error(
+      "イベント名を入力してください。",
+    );
   }
 
   // ----------------------------------------
-  // プラン設定
+  // プラン取得
   // ----------------------------------------
 
-  const { EVENT_PLANS } = await import(
-    "@/lib/event-plan"
-  );
+  const { data: plan, error: planError } =
+    await supabase
+      .from("event_plans")
+      .select(
+        "id, name, price, max_upload_count, retention_days",
+      )
+      .eq("id", input.plan)
+      .eq("is_active", true)
+      .single();
 
-  const plan = EVENT_PLANS[input.plan];
+  if (planError || !plan) {
+    console.error("event_plans error:", planError);
+
+    throw new Error(
+      "イベントプランを取得できませんでした。",
+    );
+  }
 
   // ----------------------------------------
   // 管理者判定
@@ -177,14 +247,29 @@ export async function createEvent(
       event_token: eventToken,
       user_id: user.id,
 
-      plan: input.plan,
+      // DBのプランIDを保存
+      plan: plan.id,
 
+      // 枚数もDBのプラン設定から決定
       max_upload_count: isAdmin
         ? 2147483647
-        : plan.maxUploadCount,
+        : plan.max_upload_count,
 
-      upload_deadline: input.uploadDeadline,
-      event_deadline: input.eventDeadline,
+      retention_days: plan.retention_days,
+
+      // 日本時間として保存
+      event_start_at:
+        dateToJSTStartOfDay(
+          input.eventStartAt,
+        ),
+
+      // 終了日はその日の23:59:59.999まで
+      event_deadline:
+        input.eventDeadline
+          ? dateToJSTEndOfDay(
+              input.eventDeadline,
+            )
+          : null,
 
       is_public: true,
       allow_guest_download: true,
@@ -201,6 +286,8 @@ export async function createEvent(
     event: data,
   };
 }
+
+
 
 export async function checkPhotoUploadLimit(
   eventId: string,
@@ -378,4 +465,28 @@ export async function getPhotoUploadLimit(
       event.max_upload_count,
     remaining,
   };
+}
+
+export async function getEventPlans() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("event_plans")
+    .select(
+      "id, name, price, max_upload_count, retention_days, is_active",
+    )
+    .eq("is_active", true)
+    .order("price", {
+      ascending: true,
+    });
+
+  if (error) {
+    console.error("getEventPlans error:", error);
+
+    throw new Error(
+      `イベントプランを取得できませんでした: ${error.message}`,
+    );
+  }
+
+  return data;
 }

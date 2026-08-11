@@ -30,7 +30,7 @@ export async function checkPhotoUploadLimit(
     await supabase
       .from("events")
       .select(
-        "id, max_upload_count, upload_deadline",
+        "id, max_upload_count, event_start_at, event_deadline",
       )
       .eq("id", eventId)
       .single();
@@ -42,16 +42,44 @@ export async function checkPhotoUploadLimit(
   }
 
   // ----------------------------------------
-  // アップロード期限チェック
+  // イベント終了チェック
   // ----------------------------------------
 
   if (
-    event.upload_deadline &&
-    new Date(event.upload_deadline).getTime() <=
+    event.event_deadline &&
+    new Date(event.event_deadline).getTime() <=
       Date.now()
   ) {
     throw new Error(
-      "写真のアップロード期限が終了しています。",
+      "このイベントは終了しているため、写真をアップロードできません。",
+    );
+  }
+
+  // ----------------------------------------
+  // イベント開始前チェック
+  // ----------------------------------------
+
+  if (
+    event.event_start_at &&
+    new Date(event.event_start_at).getTime() >
+      Date.now()
+  ) {
+    throw new Error(
+      "このイベントはまだ開始されていません。",
+    );
+  }
+
+  // ----------------------------------------
+  // イベント終了チェック
+  // ----------------------------------------
+
+  if (
+    event.event_deadline &&
+    new Date(event.event_deadline).getTime() <=
+      Date.now()
+  ) {
+    throw new Error(
+      "このイベントは終了しています。",
     );
   }
 

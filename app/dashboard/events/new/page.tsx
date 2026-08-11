@@ -1,12 +1,50 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import {
+  FormEvent,
+  useEffect,
+  useState,
+} from "react";
+
 import { useRouter } from "next/navigation";
+import PlanSelector from "@/components/dashboard/PlanSelector";
 
-import { createEvent } from "@/actions/event.actions";
-import type { EventPlan } from "@/lib/event-plan";
+import {
+  createEvent,
+  getEventPlans,
+} from "@/actions/event.actions";
 
-function getMinDateTime() {
+const MAX_EVENT_DURATION_DAYS = 14;
+
+function getMaxDate(startDate: string) {
+  if (!startDate) {
+    return "";
+  }
+
+  const date = new Date(
+    `${startDate}T00:00:00`,
+  );
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  date.setDate(
+    date.getDate() + MAX_EVENT_DURATION_DAYS,
+  );
+
+  const year = date.getFullYear();
+  const month = String(
+    date.getMonth() + 1,
+  ).padStart(2, "0");
+  const day = String(
+    date.getDate(),
+  ).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function getMinDate() {
   const now = new Date();
 
   const offset = now.getTimezoneOffset();
@@ -15,38 +53,35 @@ function getMinDateTime() {
     now.getTime() - offset * 60 * 1000,
   );
 
-  return localDate.toISOString().slice(0, 16);
+  return localDate.toISOString().slice(0, 10);
 }
 
 export default function NewEventPage() {
   const router = useRouter();
-  const [plan, setPlan] = useState<EventPlan>("free");
+
+  const [plan, setPlan] = useState("free");
+
+  const [plans, setPlans] = useState<
+    Awaited<ReturnType<typeof getEventPlans>>
+  >([]);
+
 
   // ----------------------------------------
   // 基本情報
   // ----------------------------------------
-
   const [name, setName] = useState("");
 
   // ----------------------------------------
-  // 写真アップロード期限
+  // イベント開始日
   // ----------------------------------------
-
-  const [hasUploadDeadline, setHasUploadDeadline] =
-    useState(false);
-
-  const [uploadDeadline, setUploadDeadline] =
-    useState("");
+  const [eventStartDate, setEventStartDate] = useState("");
 
   // ----------------------------------------
   // イベント終了日
   // ----------------------------------------
+  const [hasEventDeadline, setHasEventDeadline] = useState(false);
 
-  const [hasEventDeadline, setHasEventDeadline] =
-    useState(false);
-
-  const [eventDeadline, setEventDeadline] =
-    useState("");
+  const [eventDeadline, setEventDeadline] = useState("");
 
   // ----------------------------------------
   // 状態
@@ -66,7 +101,6 @@ export default function NewEventPage() {
     // ----------------------------------------
     // 基本バリデーション
     // ----------------------------------------
-
     const trimmedName = name.trim();
 
     if (!trimmedName) {
@@ -75,18 +109,15 @@ export default function NewEventPage() {
       return;
     }
 
-    // ----------------------------------------
-    // 期限バリデーション
-    // ----------------------------------------
-
-    if (hasUploadDeadline && !uploadDeadline) {
-      setError(
-        "写真アップロード期限を設定してください。",
-      );
+    if (!plan) {
+      setError("料金プランを選択してください。");
       setLoading(false);
       return;
     }
 
+    // ----------------------------------------
+    // 期限バリデーション
+    // ----------------------------------------
     if (hasEventDeadline && !eventDeadline) {
       setError(
         "イベント終了日を設定してください。",
@@ -95,61 +126,53 @@ export default function NewEventPage() {
       return;
     }
 
+    if (!eventStartDate) {
+      setError(
+        "イベント開始日を設定してください。",
+      );
+      setLoading(false);
+      return;
+    }
+
     // ----------------------------------------
     // 日時チェック
     // ----------------------------------------
-
-    if (hasUploadDeadline && uploadDeadline) {
-      const uploadDate = new Date(uploadDeadline);
-
-      if (uploadDate.getTime() <= Date.now()) {
-        setError(
-          "写真アップロード期限は現在より後の日時を設定してください。",
-        );
-        setLoading(false);
-        return;
-      }
+    if (
+      hasEventDeadline &&
+      eventDeadline &&
+      eventDeadline < eventStartDate
+    ) {
+      setError(
+        "イベント終了日は開始日以降の日付を設定してください。",
+      );
+      setLoading(false);
+      return;
     }
 
-    if (hasEventDeadline && eventDeadline) {
-      const eventDate = new Date(eventDeadline);
-
-      if (eventDate.getTime() <= Date.now()) {
-        setError(
-          "イベント終了日は現在より後の日時を設定してください。",
-        );
-        setLoading(false);
-        return;
-      }
+    if (
+      hasEventDeadline &&
+      eventDeadline &&
+      maxEventDate &&
+      eventDeadline > maxEventDate
+    ) {
+      setError(
+        `イベント期間は最大${MAX_EVENT_DURATION_DAYS}日間です。`,
+      );
+      setLoading(false);
+      return;
     }
 
     // ----------------------------------------
     // イベント作成
     // ----------------------------------------
-
     try {
       await createEvent({
         name: trimmedName,
-
-        // ----------------------------------------
-        // Step 2-2ではFREE固定
-        // Step 2-3で料金プラン選択に変更
-        // ----------------------------------------
-
         plan,
-
-        uploadDeadline:
-          hasUploadDeadline && uploadDeadline
-            ? new Date(
-                uploadDeadline,
-              ).toISOString()
-            : null,
-
+        eventStartAt: eventStartDate,
         eventDeadline:
           hasEventDeadline && eventDeadline
-            ? new Date(
-                eventDeadline,
-              ).toISOString()
+            ? eventDeadline
             : null,
       });
 
@@ -171,7 +194,31 @@ export default function NewEventPage() {
     }
   }
 
-  const minDateTime = getMinDateTime();
+  const minDate = getMinDate();
+  
+  const maxEventDate = getMaxDate(eventStartDate);
+
+  useEffect(() => {
+    async function loadPlans() {
+      try {
+        const data = await getEventPlans();
+        setPlans(data);
+        if (data.length > 0) {
+          setPlan(data[0].id);
+        }
+      } catch (error) {
+        console.error(error);
+
+        setError(
+          error instanceof Error
+            ? error.message
+            : "イベントプランの取得に失敗しました。",
+        );
+      }
+    }
+
+    loadPlans();
+  }, []);
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -230,160 +277,37 @@ export default function NewEventPage() {
             {/* ---------------------------------------- */}
             {/* 料金プラン */}
             {/* ---------------------------------------- */}
-
-            <div>
-              <label className="mb-3 block text-sm font-medium text-gray-900">
-                料金プラン
-              </label>
-
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={() => setPlan("free")}
-                  className={`w-full rounded-xl border p-4 text-left transition ${
-                    plan === "free"
-                      ? "border-black bg-gray-50"
-                      : "border-gray-200 hover:border-gray-400"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold">
-                        FREE
-                      </p>
-
-                      <p className="mt-1 text-sm text-gray-500">
-                        30枚まで
-                      </p>
-                    </div>
-
-                    <p className="font-semibold">
-                      0円
-                    </p>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPlan("standard")}
-                  className={`w-full rounded-xl border p-4 text-left transition ${
-                    plan === "standard"
-                      ? "border-black bg-gray-50"
-                      : "border-gray-200 hover:border-gray-400"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold">
-                        STANDARD
-                      </p>
-
-                      <p className="mt-1 text-sm text-gray-500">
-                        300枚まで
-                      </p>
-                    </div>
-
-                    <p className="font-semibold">
-                      2,490円
-                    </p>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPlan("plus")}
-                  className={`w-full rounded-xl border p-4 text-left transition ${
-                    plan === "plus"
-                      ? "border-black bg-gray-50"
-                      : "border-gray-200 hover:border-gray-400"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold">
-                        PLUS
-                      </p>
-
-                      <p className="mt-1 text-sm text-gray-500">
-                        1,000枚まで
-                      </p>
-                    </div>
-
-                    <p className="font-semibold">
-                      4,980円
-                    </p>
-                  </div>
-                </button>
-              </div>
-
-              <p className="mt-2 text-xs text-gray-400">
-                イベントごとに料金が発生します。
-              </p>
-            </div>
+            <PlanSelector
+              plans={plans}
+              selectedPlan={plan}
+              onSelect={setPlan}
+            />
 
             {/* ---------------------------------------- */}
-            {/* 写真アップロード期限 */}
+            {/* イベント開始日 */}
             {/* ---------------------------------------- */}
-
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-900">
-                写真アップロード期限
+              <label
+                htmlFor="event-start-at"
+                className="mb-2 block text-sm font-medium text-gray-900"
+              >
+                イベント開始日
               </label>
 
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setHasUploadDeadline(true);
-
-                    if (!uploadDeadline) {
-                      setUploadDeadline(
-                        minDateTime,
-                      );
-                    }
-                  }}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                    hasUploadDeadline
-                      ? "bg-black text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  期限を設定
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setHasUploadDeadline(false);
-                    setUploadDeadline("");
-                  }}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                    !hasUploadDeadline
-                      ? "bg-black text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  期限なし
-                </button>
-              </div>
-
-              {hasUploadDeadline && (
-                <input
-                  id="upload-deadline"
-                  type="datetime-local"
-                  min={minDateTime}
-                  value={uploadDeadline}
-                  onChange={(event) =>
-                    setUploadDeadline(
-                      event.target.value,
-                    )
-                  }
-                  className="mt-3 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-black"
-                />
-              )}
+              <input
+                id="event-start-at"
+                type="date"
+                min={minDate}
+                value={eventStartDate}
+                onChange={(event) =>
+                  setEventStartDate(event.target.value)
+                }
+                required
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-black"
+              />
 
               <p className="mt-2 text-xs text-gray-400">
-                期限を過ぎるとゲストは写真をアップロードできなくなります。
+                イベントが開催される日時を設定してください。
               </p>
             </div>
 
@@ -404,7 +328,7 @@ export default function NewEventPage() {
 
                     if (!eventDeadline) {
                       setEventDeadline(
-                        minDateTime,
+                        minDate,
                       );
                     }
                   }}
@@ -436,13 +360,12 @@ export default function NewEventPage() {
               {hasEventDeadline && (
                 <input
                   id="event-deadline"
-                  type="datetime-local"
-                  min={minDateTime}
+                  type="date"
+                  min={eventStartDate || minDate}
+                  max={maxEventDate || undefined}
                   value={eventDeadline}
                   onChange={(event) =>
-                    setEventDeadline(
-                      event.target.value,
-                    )
+                    setEventDeadline(event.target.value)
                   }
                   className="mt-3 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-black"
                 />

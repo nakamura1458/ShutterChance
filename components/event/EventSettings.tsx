@@ -3,20 +3,24 @@
 import { useState } from "react";
 
 import { updateEventSettings } from "@/actions/event.actions";
+import { EVENT_PLANS } from "@/lib/event-plan";
 
 type Props = {
   event: {
     id: string;
     name: string;
+    plan: "free" | "standard" | "plus";
     max_upload_count: number;
-    upload_deadline: string | null;
+    event_start_at: string | null;
     event_deadline: string | null;
     is_public: boolean;
     allow_guest_download: boolean;
   };
 };
 
-function toDateTimeLocal(value: string | null) {
+const MAX_EVENT_DURATION_DAYS = 14;
+
+function toDateLocal(value: string | null) {
   if (!value) {
     return "";
   }
@@ -33,10 +37,10 @@ function toDateTimeLocal(value: string | null) {
     date.getTime() - offset * 60 * 1000,
   );
 
-  return localDate.toISOString().slice(0, 16);
+  return localDate.toISOString().slice(0, 10);
 }
 
-function getMinDateTime() {
+function getMinDate() {
   const now = new Date();
 
   const offset = now.getTimezoneOffset();
@@ -45,46 +49,106 @@ function getMinDateTime() {
     now.getTime() - offset * 60 * 1000,
   );
 
-  return localDate.toISOString().slice(0, 16);
+  return localDate.toISOString().slice(0, 10);
+}
+
+function getMaxDate(
+  startDateString: string,
+) {
+  if (!startDateString) {
+    return "";
+  }
+
+  const date = new Date(
+    `${startDateString}T00:00:00`,
+  );
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  date.setDate(
+    date.getDate() +
+      MAX_EVENT_DURATION_DAYS,
+  );
+
+  const offset =
+    date.getTimezoneOffset();
+
+  const localDate = new Date(
+    date.getTime() -
+      offset * 60 * 1000,
+  );
+
+  return localDate
+    .toISOString()
+    .slice(0, 10);
 }
 
 export default function EventSettings({
   event,
 }: Props) {
-  const [name, setName] = useState(event.name);
+  const plan = EVENT_PLANS[event.plan];
+  const [name, setName] = useState(
+    event.name,
+  );
 
-  const [maxUploadCount, setMaxUploadCount] =
-    useState(String(event.max_upload_count));
+  // ----------------------------------------
+  // イベント開始日時
+  // ----------------------------------------
 
-  // 写真アップロード期限
-  const [hasUploadDeadline, setHasUploadDeadline] =
-    useState(Boolean(event.upload_deadline));
-
-  const [uploadDeadline, setUploadDeadline] =
+  const [eventStartAt, setEventStartAt] =
     useState(
-      toDateTimeLocal(event.upload_deadline),
+      toDateLocal(event.event_start_at),
     );
 
-  // イベント終了日
-  const [hasEventDeadline, setHasEventDeadline] =
-    useState(Boolean(event.event_deadline));
+  // ----------------------------------------
+  // イベント終了日時
+  // ----------------------------------------
 
-  const [eventDeadline, setEventDeadline] =
-    useState(
-      toDateTimeLocal(event.event_deadline),
-    );
+  const [
+    hasEventDeadline,
+    setHasEventDeadline,
+  ] = useState(
+    Boolean(event.event_deadline)
+  );
 
+  const [
+    eventDeadline,
+    setEventDeadline,
+  ] = useState(
+    toDateLocal(event.event_deadline)
+  );
+
+  // ----------------------------------------
   // その他の設定
+  // ----------------------------------------
+
   const [isPublic, setIsPublic] =
     useState(event.is_public);
 
-  const [allowGuestDownload, setAllowGuestDownload] =
-    useState(event.allow_guest_download);
+  const [
+    allowGuestDownload,
+    setAllowGuestDownload,
+  ] = useState(
+    event.allow_guest_download,
+  );
 
+  // ----------------------------------------
   // 保存状態
+  // ----------------------------------------
+
   const [saving, setSaving] = useState(false);
+
   const [message, setMessage] = useState("");
+
   const [error, setError] = useState("");
+  
+  const minDate = getMinDate();
+
+  const maxEventDate = getMaxDate(eventStartAt);
+
+  const startDate = new Date(eventStartAt);
 
   async function handleSave() {
     setSaving(true);
@@ -95,40 +159,46 @@ export default function EventSettings({
     // 基本バリデーション
     // ----------------------------------------
 
-    const trimmedName = name.trim();
+    const trimmedName =
+      name.trim();
 
     if (!trimmedName) {
-      setError("イベント名を入力してください。");
+      setError(
+        "イベント名を入力してください。",
+      );
       setSaving(false);
       return;
     }
 
-    const uploadCount = Number(maxUploadCount);
+    // ----------------------------------------
+    // イベント開始日
+    // ----------------------------------------
+
+    if (!eventStartAt) {
+      setError(
+        "イベント開始日を設定してください。",
+      );
+      setSaving(false);
+      return;
+    }
+
+    // 今日より前の日付は禁止
+    if (eventStartAt < minDate) {
+      setError(
+        "イベント開始日は今日以降の日付を設定してください。",
+      );
+      setSaving(false);
+      return;
+    }
+
+    // ----------------------------------------
+    // イベント終了日
+    // ----------------------------------------
 
     if (
-      !Number.isInteger(uploadCount) ||
-      uploadCount < 1
+      hasEventDeadline &&
+      !eventDeadline
     ) {
-      setError(
-        "アップロード枚数は1以上で指定してください。",
-      );
-      setSaving(false);
-      return;
-    }
-
-    // ----------------------------------------
-    // 期限バリデーション
-    // ----------------------------------------
-
-    if (hasUploadDeadline && !uploadDeadline) {
-      setError(
-        "写真アップロード期限を設定してください。",
-      );
-      setSaving(false);
-      return;
-    }
-
-    if (hasEventDeadline && !eventDeadline) {
       setError(
         "イベント終了日を設定してください。",
       );
@@ -136,24 +206,42 @@ export default function EventSettings({
       return;
     }
 
-    if (hasUploadDeadline && uploadDeadline) {
-      const uploadDate = new Date(uploadDeadline);
-
-      if (uploadDate.getTime() <= Date.now()) {
+    if (
+      hasEventDeadline &&
+      eventDeadline
+    ) {
+      // 開始日より前は禁止
+      if (eventDeadline < eventStartAt) {
         setError(
-          "写真アップロード期限は現在より後の日時を設定してください。",
+          "イベント終了日は開始日以降の日付を設定してください。",
         );
         setSaving(false);
         return;
       }
-    }
 
-    if (hasEventDeadline && eventDeadline) {
-      const eventDate = new Date(eventDeadline);
+      // 最大14日間
+      const startDate = new Date(
+        `${eventStartAt}T00:00:00`,
+      );
 
-      if (eventDate.getTime() <= Date.now()) {
+      const endDate = new Date(
+        `${eventDeadline}T00:00:00`,
+      );
+
+      const maxEventDuration =
+        MAX_EVENT_DURATION_DAYS *
+        24 *
+        60 *
+        60 *
+        1000;
+
+      if (
+        endDate.getTime() -
+          startDate.getTime() >
+        maxEventDuration
+      ) {
         setError(
-          "イベント終了日は現在より後の日時を設定してください。",
+          `イベント期間は最大${MAX_EVENT_DURATION_DAYS}日間です。`,
         );
         setSaving(false);
         return;
@@ -168,19 +256,17 @@ export default function EventSettings({
       await updateEventSettings({
         eventId: event.id,
         name: trimmedName,
-        maxUploadCount: uploadCount,
 
-        uploadDeadline:
-          hasUploadDeadline && uploadDeadline
-            ? new Date(
-                uploadDeadline,
-              ).toISOString()
-            : null,
+        eventStartAt:
+          new Date(
+            `${eventStartAt}T00:00:00`,
+          ).toISOString(),
 
         eventDeadline:
-          hasEventDeadline && eventDeadline
+          hasEventDeadline &&
+          eventDeadline
             ? new Date(
-                eventDeadline,
+                `${eventDeadline}T00:00:00`,
               ).toISOString()
             : null,
 
@@ -188,7 +274,9 @@ export default function EventSettings({
         allowGuestDownload,
       });
 
-      setMessage("設定を保存しました。");
+      setMessage(
+        "設定を保存しました。",
+      );
     } catch (error) {
       console.error(error);
 
@@ -201,8 +289,6 @@ export default function EventSettings({
       setSaving(false);
     }
   }
-
-  const minDateTime = getMinDateTime();
 
   return (
     <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-6">
@@ -236,7 +322,9 @@ export default function EventSettings({
             type="text"
             value={name}
             onChange={(event) =>
-              setName(event.target.value)
+              setName(
+                event.target.value,
+              )
             }
             className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-black"
           />
@@ -257,148 +345,158 @@ export default function EventSettings({
           <input
             id="max-upload-count"
             type="number"
-            min={1}
-            value={maxUploadCount}
-            onChange={(event) =>
-              setMaxUploadCount(event.target.value)
-            }
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-black"
+            value={plan.maxUploadCount}
+            disabled
+            readOnly
+            className="w-full rounded-xl border border-gray-200 bg-gray-100 px-4 py-3 text-sm text-gray-500 outline-none"
           />
 
           <p className="mt-2 text-xs text-gray-400">
-            ゲスト1人がアップロードできる写真の最大枚数です。
+            {plan.name}プランでは、最大 {plan.maxUploadCount.toLocaleString()} 枚までアップロードできます。
           </p>
+
         </div>
 
         {/* ---------------------------------------- */}
-        {/* 写真アップロード期限 */}
+        {/* イベント開催期間 */}
         {/* ---------------------------------------- */}
 
         <div>
           <label className="mb-2 block text-sm font-medium text-gray-900">
-            写真アップロード期限
+            イベント開催期間
           </label>
 
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setHasUploadDeadline(true);
+          <div className="space-y-3">
+            {/* 開始日時 */}
+            <div>
+              <label
+                htmlFor="event-start-at"
+                className="mb-1 block text-xs text-gray-500"
+              >
+                開始日時
+              </label>
 
-                if (!uploadDeadline) {
-                  setUploadDeadline(
-                    minDateTime,
-                  );
+              <input
+                id="event-start-at"
+                type="date"
+                min={minDate}
+                max={
+                  maxEventDate ||
+                  undefined
                 }
-              }}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                hasUploadDeadline
-                  ? "bg-black text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              期限を設定
-            </button>
+                value={eventStartAt}
+                onChange={(event) => {
+                  const value =
+                    event.target.value;
 
-            <button
-              type="button"
-              onClick={() => {
-                setHasUploadDeadline(false);
-                setUploadDeadline("");
-              }}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                !hasUploadDeadline
-                  ? "bg-black text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              期限なし
-            </button>
+                  setEventStartAt(value);
+
+                  // 開始日時を変更して、
+                  // 現在の終了日時が14日を超える場合は
+                  // 自動的に14日後へ調整
+                  if (
+                    eventDeadline &&
+                    value
+                  ) {
+                    const maxDate = getMaxDate(value);
+
+                    if (maxDate && eventDeadline > maxDate) {
+                      setEventDeadline(maxDate);
+                    }
+                  }
+                }}
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-black"
+              />
+            </div>
+
+            {/* 終了日時 */}
+            <div>
+              <label
+                htmlFor="event-deadline"
+                className="mb-1 block text-xs text-gray-500"
+              >
+                終了日時
+              </label>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHasEventDeadline(
+                      true,
+                    );
+
+                    if (
+                      !eventDeadline
+                    ) {
+                      setEventDeadline(
+                        getMaxDate(
+                          eventStartAt,
+                        ) ||
+                          eventStartAt ||
+                          minDate,
+                      );
+                    }
+                  }}
+                  className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+                    hasEventDeadline
+                      ? "bg-black text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  終了日時を設定
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHasEventDeadline(
+                      false,
+                    );
+                    setEventDeadline(
+                      "",
+                    );
+                  }}
+                  className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+                    !hasEventDeadline
+                      ? "bg-black text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  設定しない
+                </button>
+              </div>
+
+              {hasEventDeadline && (
+                <input
+                  id="event-deadline"
+                  type="date"
+                  min={
+                    eventStartAt ||
+                    minDate
+                  }
+                  max={
+                    maxEventDate ||
+                    undefined
+                  }
+                  value={
+                    eventDeadline
+                  }
+                  onChange={(event) =>
+                    setEventDeadline(
+                      event.target.value,
+                    )
+                  }
+                  className="mt-3 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-black"
+                />
+              )}
+            </div>
           </div>
 
-          {hasUploadDeadline && (
-            <input
-              id="upload-deadline"
-              type="datetime-local"
-              min={minDateTime}
-              value={uploadDeadline}
-              onChange={(event) =>
-                setUploadDeadline(
-                  event.target.value,
-                )
-              }
-              className="mt-3 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-black"
-            />
-          )}
-
           <p className="mt-2 text-xs text-gray-400">
-            期限を過ぎるとゲストは写真をアップロードできなくなります。
-          </p>
-        </div>
-
-        {/* ---------------------------------------- */}
-        {/* イベント終了日 */}
-        {/* ---------------------------------------- */}
-
-        <div>
-          <label className="mb-2 block text-sm font-medium text-gray-900">
-            イベント終了日
-          </label>
-
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setHasEventDeadline(true);
-
-                if (!eventDeadline) {
-                  setEventDeadline(
-                    minDateTime,
-                  );
-                }
-              }}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                hasEventDeadline
-                  ? "bg-black text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              日付を設定
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setHasEventDeadline(false);
-                setEventDeadline("");
-              }}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                !hasEventDeadline
-                  ? "bg-black text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              設定しない
-            </button>
-          </div>
-
-          {hasEventDeadline && (
-            <input
-              id="event-deadline"
-              type="datetime-local"
-              min={minDateTime}
-              value={eventDeadline}
-              onChange={(event) =>
-                setEventDeadline(
-                  event.target.value,
-                )
-              }
-              className="mt-3 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-black"
-            />
-          )}
-
-          <p className="mt-2 text-xs text-gray-400">
-            未設定の場合はイベント終了日の制限はありません。
+            イベント期間は最大
+            {MAX_EVENT_DURATION_DAYS}
+            日間です。
           </p>
         </div>
 
@@ -420,7 +518,9 @@ export default function EventSettings({
           <button
             type="button"
             onClick={() =>
-              setIsPublic(!isPublic)
+              setIsPublic(
+                !isPublic,
+              )
             }
             className={`relative h-7 w-12 rounded-full transition ${
               isPublic
@@ -504,7 +604,9 @@ export default function EventSettings({
           disabled={saving}
           className="w-full rounded-xl bg-black px-4 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {saving ? "保存中..." : "変更を保存"}
+          {saving
+            ? "保存中..."
+            : "変更を保存"}
         </button>
       </div>
     </section>
