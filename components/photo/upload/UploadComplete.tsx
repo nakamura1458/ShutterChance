@@ -13,13 +13,13 @@ import {
 import Link from "next/link";
 
 type Props = {
-  uploadedPhotos: File[];
+  photos: File[];
   eventToken: string;
   onRetryUpload: () => void;
 };
 
 export default function UploadComplete({
-  uploadedPhotos,
+  photos,
   eventToken,
   onRetryUpload,
 }: Props) {
@@ -54,10 +54,10 @@ export default function UploadComplete({
   // ----------------------------------------
 
   const previewUrls = useMemo(() => {
-    return uploadedPhotos.map((photo) =>
+    return photos.map((photo) =>
       URL.createObjectURL(photo),
     );
-  }, [uploadedPhotos]);
+  }, [photos]);
 
   // ----------------------------------------
   // プレビューURL解放
@@ -91,7 +91,7 @@ export default function UploadComplete({
 
   const handleShare = async () => {
     const selectedPhotos = selectedIndexes
-      .map((index) => uploadedPhotos[index])
+      .map((index) => photos[index])
       .filter(
         (photo): photo is File =>
           Boolean(photo),
@@ -360,7 +360,7 @@ export default function UploadComplete({
               "
             >
               <span className="font-semibold text-gray-900">
-                {uploadedPhotos.length}枚
+                {photos.length}枚
               </span>
               の写真を
               <br />

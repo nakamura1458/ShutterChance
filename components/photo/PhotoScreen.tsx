@@ -24,11 +24,6 @@ export default function PhotoScreen({
 }: Props) {
   if (flow.state.status === "success") {
     return (
-      // <UploadComplete
-      //   photos={uploadedPhotos}
-      //   onViewPhotos={onViewPhotos}
-      //   onRetryUpload={onSelectPhoto}
-      // />
       <UploadComplete
         photos={uploadedPhotos}
         eventToken={eventToken}
