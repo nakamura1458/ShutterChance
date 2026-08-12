@@ -34,30 +34,14 @@ export default async function EventPage({
 
   const photos = await getPhotos(event.id);
 
-  // ----------------------------------------
   // イベント状態
-  // ----------------------------------------
-  // const now = Date.now();
+  const now = Date.now();
 
-  // const isBeforeEvent =
-  //   Boolean(
-  //     event.event_start_at &&
-  //       new Date(
-  //         event.event_start_at,
-  //       ).getTime() > Date.now(),
-  //   );
+  const isBeforeEvent = Boolean(event.event_start_at && new Date(event.event_start_at).getTime() > Date.now());
 
-  // const isEventEnded =
-  //   Boolean(
-  //     event.event_deadline &&
-  //       new Date(
-  //         event.event_deadline,
-  //       ).getTime() <= Date.now(),
-  //   );
+  const isEventEnded = Boolean(event.event_deadline && new Date(event.event_deadline).getTime() <= Date.now());
 
-  // ----------------------------------------
   // 写真アップロード上限
-  // ----------------------------------------
   const currentPhotoCount = photos.length;
 
   const isAdminEvent =

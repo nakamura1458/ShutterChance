@@ -16,6 +16,26 @@ import {
 
 const MAX_EVENT_DURATION_DAYS = 14;
 
+// ----------------------------------------
+// 今日の日付を YYYY-MM-DD で取得
+// ----------------------------------------
+function getTodayDate() {
+  const now = new Date();
+
+  const year = now.getFullYear();
+  const month = String(
+    now.getMonth() + 1,
+  ).padStart(2, "0");
+  const day = String(
+    now.getDate(),
+  ).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+// ----------------------------------------
+// 開始日から最大終了日を取得
+// ----------------------------------------
 function getMaxDate(startDate: string) {
   if (!startDate) {
     return "";
@@ -30,7 +50,8 @@ function getMaxDate(startDate: string) {
   }
 
   date.setDate(
-    date.getDate() + MAX_EVENT_DURATION_DAYS,
+    date.getDate() +
+      MAX_EVENT_DURATION_DAYS,
   );
 
   const year = date.getFullYear();
@@ -44,52 +65,35 @@ function getMaxDate(startDate: string) {
   return `${year}-${month}-${day}`;
 }
 
-function getMinDate() {
-  const now = new Date();
-
-  const offset = now.getTimezoneOffset();
-
-  const localDate = new Date(
-    now.getTime() - offset * 60 * 1000,
-  );
-
-  return localDate.toISOString().slice(0, 10);
-}
-
 export default function NewEventPage() {
   const router = useRouter();
 
-  const [plan, setPlan] = useState("free");
+  // プラン
+  const [plan, setPlan] = useState("standard");
 
-  const [plans, setPlans] = useState<
-    Awaited<ReturnType<typeof getEventPlans>>
-  >([]);
+  const [plans, setPlans] = useState<Awaited<ReturnType<typeof getEventPlans>>>([]);
 
-
-  // ----------------------------------------
   // 基本情報
-  // ----------------------------------------
   const [name, setName] = useState("");
 
-  // ----------------------------------------
   // イベント開始日
-  // ----------------------------------------
-  const [eventStartDate, setEventStartDate] = useState("");
+  const minDate = getTodayDate();
+  const [eventStartDate, setEventStartDate] = useState(minDate);
 
-  // ----------------------------------------
   // イベント終了日
-  // ----------------------------------------
   const [hasEventDeadline, setHasEventDeadline] = useState(false);
 
-  const [eventDeadline, setEventDeadline] = useState("");
+  const [eventDeadline, setEventDeadline] = useState(getMaxDate(minDate));
 
-  // ----------------------------------------
   // 状態
-  // ----------------------------------------
-
   const [error, setError] = useState("");
+
   const [loading, setLoading] = useState(false);
 
+  // 日付
+  const maxEventDate = getMaxDate(eventStartDate);
+
+  // イベント作成
   async function handleCreateEvent(
     event: FormEvent<HTMLFormElement>,
   ) {
@@ -98,34 +102,26 @@ export default function NewEventPage() {
     setError("");
     setLoading(true);
 
-    // ----------------------------------------
     // 基本バリデーション
-    // ----------------------------------------
     const trimmedName = name.trim();
 
     if (!trimmedName) {
-      setError("イベント名を入力してください。");
-      setLoading(false);
-      return;
-    }
-
-    if (!plan) {
-      setError("料金プランを選択してください。");
-      setLoading(false);
-      return;
-    }
-
-    // ----------------------------------------
-    // 期限バリデーション
-    // ----------------------------------------
-    if (hasEventDeadline && !eventDeadline) {
       setError(
-        "イベント終了日を設定してください。",
+        "イベント名を入力してください。",
       );
       setLoading(false);
       return;
     }
 
+    if (!plan) {
+      setError(
+        "料金プランを選択してください。",
+      );
+      setLoading(false);
+      return;
+    }
+
+    // イベント開始日
     if (!eventStartDate) {
       setError(
         "イベント開始日を設定してください。",
@@ -134,52 +130,54 @@ export default function NewEventPage() {
       return;
     }
 
-    // ----------------------------------------
-    // 日時チェック
-    // ----------------------------------------
-    if (
-      hasEventDeadline &&
-      eventDeadline &&
-      eventDeadline < eventStartDate
-    ) {
+    // 今日より前の日付は禁止
+    if (eventStartDate < minDate) {
       setError(
-        "イベント終了日は開始日以降の日付を設定してください。",
+        "イベント開始日は今日以降の日付を設定してください。",
       );
       setLoading(false);
       return;
     }
 
-    if (
-      hasEventDeadline &&
-      eventDeadline &&
-      maxEventDate &&
-      eventDeadline > maxEventDate
-    ) {
+    // イベント終了日
+    if (!eventDeadline) {
       setError(
-        `イベント期間は最大${MAX_EVENT_DURATION_DAYS}日間です。`,
+        "イベント終了日を設定してください。",
       );
       setLoading(false);
       return;
     }
 
-    // ----------------------------------------
+    if (eventDeadline) {
+      // 開始日より前は禁止
+      if (eventDeadline < eventStartDate) {
+        setError(
+          "イベント終了日は開始日以降の日付を設定してください。",
+        );
+        setLoading(false);
+        return;
+      }
+
+      // 最大14日間
+      if (maxEventDate && eventDeadline > maxEventDate) {
+        setError(
+          `イベント期間は最大${MAX_EVENT_DURATION_DAYS}日間です。`,
+        );
+        setLoading(false);
+        return;
+      }
+    }
+
     // イベント作成
-    // ----------------------------------------
     try {
       await createEvent({
         name: trimmedName,
         plan,
         eventStartAt: eventStartDate,
-        eventDeadline:
-          hasEventDeadline && eventDeadline
-            ? eventDeadline
-            : null,
+        eventDeadline
       });
 
-      // ----------------------------------------
       // ダッシュボードへ
-      // ----------------------------------------
-
       router.push("/dashboard");
     } catch (err) {
       console.error(err);
@@ -194,18 +192,13 @@ export default function NewEventPage() {
     }
   }
 
-  const minDate = getMinDate();
-  
-  const maxEventDate = getMaxDate(eventStartDate);
-
+  // プラン取得
   useEffect(() => {
     async function loadPlans() {
       try {
         const data = await getEventPlans();
+
         setPlans(data);
-        if (data.length > 0) {
-          setPlan(data[0].id);
-        }
       } catch (error) {
         console.error(error);
 
@@ -223,10 +216,17 @@ export default function NewEventPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-2xl px-6 py-10">
+        {/* ---------------------------------------- */}
         {/* 戻る */}
+        {/* ---------------------------------------- */}
+
         <button
           type="button"
-          onClick={() => router.push("/dashboard")}
+          onClick={() =>
+            router.push(
+              "/dashboard",
+            )
+          }
           className="text-sm text-gray-500 transition hover:text-black"
         >
           ← ダッシュボードに戻る
@@ -246,7 +246,9 @@ export default function NewEventPage() {
           </p>
 
           <form
-            onSubmit={handleCreateEvent}
+            onSubmit={
+              handleCreateEvent
+            }
             className="mt-8 space-y-6"
           >
             {/* ---------------------------------------- */}
@@ -266,7 +268,9 @@ export default function NewEventPage() {
                 type="text"
                 value={name}
                 onChange={(event) =>
-                  setName(event.target.value)
+                  setName(
+                    event.target.value,
+                  )
                 }
                 placeholder="例：結婚式"
                 required
@@ -277,109 +281,81 @@ export default function NewEventPage() {
             {/* ---------------------------------------- */}
             {/* 料金プラン */}
             {/* ---------------------------------------- */}
+
             <PlanSelector
               plans={plans}
               selectedPlan={plan}
               onSelect={setPlan}
             />
 
-            {/* ---------------------------------------- */}
+            {/* ----------------------------------------
             {/* イベント開始日 */}
             {/* ---------------------------------------- */}
             <div>
               <label
-                htmlFor="event-start-at"
+                htmlFor="event-start-date"
                 className="mb-2 block text-sm font-medium text-gray-900"
               >
                 イベント開始日
               </label>
 
               <input
-                id="event-start-at"
+                id="event-start-date"
                 type="date"
                 min={minDate}
                 value={eventStartDate}
-                onChange={(event) =>
-                  setEventStartDate(event.target.value)
-                }
+                onChange={(event) => {
+                  const value =event.target.value;
+
+                  setEventStartDate(value);
+
+                  if (value) {
+                    setEventDeadline(getMaxDate(value));
+                  } else {
+                    setEventDeadline("");
+                  }
+                }}
                 required
                 className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-black"
               />
 
               <p className="mt-2 text-xs text-gray-400">
-                イベントが開催される日時を設定してください。
+                イベントが開催される日を設定してください。イベント開始日は、イベント作成後に変更できません。
               </p>
             </div>
 
             {/* ---------------------------------------- */}
             {/* イベント終了日 */}
             {/* ---------------------------------------- */}
-
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-900">
+              <label
+                htmlFor="event-deadline"
+                className="mb-2 block text-sm font-medium text-gray-900"
+              >
                 イベント終了日
               </label>
 
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setHasEventDeadline(true);
-
-                    if (!eventDeadline) {
-                      setEventDeadline(
-                        minDate,
-                      );
-                    }
-                  }}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                    hasEventDeadline
-                      ? "bg-black text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  日付を設定
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setHasEventDeadline(false);
-                    setEventDeadline("");
-                  }}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                    !hasEventDeadline
-                      ? "bg-black text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  設定しない
-                </button>
-              </div>
-
-              {hasEventDeadline && (
-                <input
-                  id="event-deadline"
-                  type="date"
-                  min={eventStartDate || minDate}
-                  max={maxEventDate || undefined}
-                  value={eventDeadline}
-                  onChange={(event) =>
-                    setEventDeadline(event.target.value)
-                  }
-                  className="mt-3 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-black"
-                />
-              )}
+              <input
+                id="event-deadline"
+                type="date"
+                min={eventStartDate || minDate}
+                max={maxEventDate || undefined}
+                value={eventDeadline}
+                onChange={(event) => {setEventDeadline(event.target.value)}}
+                required
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-black"
+              />
 
               <p className="mt-2 text-xs text-gray-400">
-                未設定の場合はイベント終了日の制限はありません。
+                イベント期間は最大
+                {MAX_EVENT_DURATION_DAYS}
+                日間です。
               </p>
             </div>
 
             {/* ---------------------------------------- */}
             {/* エラー */}
             {/* ---------------------------------------- */}
-
             {error && (
               <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
                 {error}
@@ -389,7 +365,6 @@ export default function NewEventPage() {
             {/* ---------------------------------------- */}
             {/* 作成ボタン */}
             {/* ---------------------------------------- */}
-
             <button
               type="submit"
               disabled={loading}

@@ -22,10 +22,7 @@ export async function checkPhotoUploadLimit(
 ) {
   const supabase = await createClient();
 
-  // ----------------------------------------
   // イベント取得
-  // ----------------------------------------
-
   const { data: event, error: eventError } =
     await supabase
       .from("events")
@@ -41,10 +38,7 @@ export async function checkPhotoUploadLimit(
     );
   }
 
-  // ----------------------------------------
   // イベント終了チェック
-  // ----------------------------------------
-
   if (
     event.event_deadline &&
     new Date(event.event_deadline).getTime() <=
@@ -55,10 +49,7 @@ export async function checkPhotoUploadLimit(
     );
   }
 
-  // ----------------------------------------
   // イベント開始前チェック
-  // ----------------------------------------
-
   if (
     event.event_start_at &&
     new Date(event.event_start_at).getTime() >
@@ -69,24 +60,7 @@ export async function checkPhotoUploadLimit(
     );
   }
 
-  // ----------------------------------------
-  // イベント終了チェック
-  // ----------------------------------------
-
-  if (
-    event.event_deadline &&
-    new Date(event.event_deadline).getTime() <=
-      Date.now()
-  ) {
-    throw new Error(
-      "このイベントは終了しています。",
-    );
-  }
-
-  // ----------------------------------------
   // 現在の写真枚数取得
-  // ----------------------------------------
-
   const { count, error: countError } =
     await supabase
       .from("photos")
@@ -102,10 +76,7 @@ export async function checkPhotoUploadLimit(
 
   const currentCount = count ?? 0;
 
-  // ----------------------------------------
   // 上限チェック
-  // ----------------------------------------
-
   if (
     currentCount >= event.max_upload_count
   ) {

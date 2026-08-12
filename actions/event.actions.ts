@@ -3,6 +3,27 @@
 import { createClient } from "@/lib/supabase/server";
 import { getEventByToken } from "@/services/event.service";
 
+// ----------------------------------------
+// YYYY-MM-DD → JST 00:00:00
+// ----------------------------------------
+function dateToJSTStartOfDay(date: string) {
+  return new Date(
+    `${date}T00:00:00+09:00`,
+  ).toISOString();
+}
+
+// ----------------------------------------
+// YYYY-MM-DD → JST 23:59:59.999
+// ----------------------------------------
+function dateToJSTEndOfDay(date: string) {
+  return new Date(
+    `${date}T23:59:59.999+09:00`,
+  ).toISOString();
+}
+
+// ----------------------------------------
+// イベントトークン取得判定
+// ----------------------------------------
 type CheckEventTokenResult =
   | {
       success: true;
@@ -40,10 +61,13 @@ export async function checkEventToken(
   };
 }
 
+
+// ----------------------------------------
+// イベント設定アップデート
+// ----------------------------------------
 type UpdateEventSettingsInput = {
   eventId: string;
   name: string;
-  eventStartAt: string;
   eventDeadline: string | null;
   isPublic: boolean;
   allowGuestDownload: boolean;
@@ -54,18 +78,14 @@ export async function updateEventSettings(
 ) {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // ログインユーザー確認
+  const {data: { user }} = await supabase.auth.getUser();
 
   if (!user) {
     throw new Error("Unauthorized");
   }
 
-  // ----------------------------------------
-  // イベント取得
-  // ----------------------------------------
-
+  // イベント情報取得（名前、プラン、作成者）
   const { data: event, error: eventError } =
     await supabase
       .from("events")
@@ -78,10 +98,7 @@ export async function updateEventSettings(
     throw new Error("イベントが見つかりません。");
   }
 
-  // ----------------------------------------
-  // プラン取得
-  // ----------------------------------------
-
+  // プラン取得（アップロード上限、保存期間）
   const { data: plan, error: planError } =
     await supabase
       .from("event_plans")
@@ -89,7 +106,6 @@ export async function updateEventSettings(
         "id, max_upload_count, retention_days",
       )
       .eq("id", event.plan)
-      .eq("is_active", true)
       .single();
 
   if (planError || !plan) {
@@ -98,10 +114,7 @@ export async function updateEventSettings(
     );
   }
 
-  // ----------------------------------------
-  // 基本バリデーション
-  // ----------------------------------------
-
+  // イベント名確認
   const name = input.name.trim();
 
   if (!name) {
@@ -110,34 +123,18 @@ export async function updateEventSettings(
     );
   }
 
-  // ----------------------------------------
   // イベント設定更新
-  // ----------------------------------------
-
   const { error } = await supabase
     .from("events")
     .update({
       name,
-
       max_upload_count: plan.max_upload_count,
-      
-      retention_days: plan.retention_days,
-
-      event_start_at: dateToJSTStartOfDay(
-        input.eventStartAt,
-      ),
-
-      event_deadline:
-        input.eventDeadline
-          ? dateToJSTEndOfDay(
-              input.eventDeadline,
-            )
-          : null,
-
+      // YYYY-MM-DDT23:59:59(UTC+9)形式
+      event_deadline: input.eventDeadline ? dateToJSTEndOfDay(input.eventDeadline) : null,
       is_public: input.isPublic,
-
       allow_guest_download: input.allowGuestDownload,
     })
+    .eq("id", event.id);
   
   if (error) {
     throw error;
@@ -148,22 +145,10 @@ export async function updateEventSettings(
   };
 }
 
-function dateToJSTStartOfDay(
-  date: string,
-) {
-  return new Date(
-    `${date}T00:00:00+09:00`,
-  ).toISOString();
-}
 
-function dateToJSTEndOfDay(
-  date: string,
-) {
-  return new Date(
-    `${date}T23:59:59.999+09:00`,
-  ).toISOString();
-}
-
+// ----------------------------------------
+// イベント新規作成
+// ----------------------------------------
 type CreateEventInput = {
   name: string;
   plan: string;
@@ -176,22 +161,14 @@ export async function createEvent(
 ) {
   const supabase = await createClient();
 
-  // ----------------------------------------
   // ログインユーザー確認
-  // ----------------------------------------
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const {data: { user }} = await supabase.auth.getUser();
 
   if (!user) {
     throw new Error("Unauthorized");
   }
 
-  // ----------------------------------------
-  // 基本バリデーション
-  // ----------------------------------------
-
+  // イベント名チェック
   const name = input.name.trim();
 
   if (!name) {
@@ -200,10 +177,7 @@ export async function createEvent(
     );
   }
 
-  // ----------------------------------------
-  // プラン取得
-  // ----------------------------------------
-
+  // プラン情報取得（プラン名、料金、アップロード上限、保存期間）
   const { data: plan, error: planError } =
     await supabase
       .from("event_plans")
@@ -222,24 +196,15 @@ export async function createEvent(
     );
   }
 
-  // ----------------------------------------
   // 管理者判定
-  // ----------------------------------------
-
   const isAdmin =
     user.id ===
     process.env.SHUTTERCHANCE_ADMIN_USER_ID;
 
-  // ----------------------------------------
   // イベントトークン生成
-  // ----------------------------------------
-
   const eventToken = crypto.randomUUID();
 
-  // ----------------------------------------
   // イベント作成
-  // ----------------------------------------
-
   const { data, error } = await supabase
     .from("events")
     .insert({
@@ -247,29 +212,16 @@ export async function createEvent(
       event_token: eventToken,
       user_id: user.id,
 
-      // DBのプランIDを保存
+      // 情報取得（event_planテーブル）
       plan: plan.id,
 
-      // 枚数もDBのプラン設定から決定
       max_upload_count: isAdmin
         ? 2147483647
         : plan.max_upload_count,
 
-      retention_days: plan.retention_days,
+      event_start_at: dateToJSTStartOfDay(input.eventStartAt),
 
-      // 日本時間として保存
-      event_start_at:
-        dateToJSTStartOfDay(
-          input.eventStartAt,
-        ),
-
-      // 終了日はその日の23:59:59.999まで
-      event_deadline:
-        input.eventDeadline
-          ? dateToJSTEndOfDay(
-              input.eventDeadline,
-            )
-          : null,
+      event_deadline: input.eventDeadline ? dateToJSTEndOfDay(input.eventDeadline) : null,
 
       is_public: true,
       allow_guest_download: true,
@@ -288,17 +240,16 @@ export async function createEvent(
 }
 
 
-
+// ----------------------------------------
+// アップロード上限確認（アップロード時）
+// ----------------------------------------
 export async function checkPhotoUploadLimit(
   eventId: string,
   uploadCount: number,
 ) {
   const supabase = await createClient();
 
-  // ----------------------------------------
-  // イベント取得
-  // ----------------------------------------
-
+  // イベント情報取得（イベントID、作成者、アップロード上限）
   const { data: event, error: eventError } =
     await supabase
       .from("events")
@@ -314,14 +265,12 @@ export async function checkPhotoUploadLimit(
     );
   }
 
-  // ----------------------------------------
-  // 管理者イベント
-  // ----------------------------------------
-
+  //==管理者イベント==//
   const isAdminEvent =
     event.user_id ===
     process.env.SHUTTERCHANCE_ADMIN_USER_ID;
 
+  // 無制限に許可
   if (isAdminEvent) {
     return {
       allowed: true,
@@ -329,10 +278,7 @@ export async function checkPhotoUploadLimit(
     };
   }
 
-  // ----------------------------------------
-  // 現在の写真枚数
-  // ----------------------------------------
-
+  //==管理者以外==//
   const { count, error: countError } =
     await supabase
       .from("photos")
@@ -350,56 +296,40 @@ export async function checkPhotoUploadLimit(
 
   const currentCount = count ?? 0;
 
-  // ----------------------------------------
   // アップロード後の枚数
-  // ----------------------------------------
+  const nextCount = currentCount + uploadCount;
 
-  const nextCount =
-    currentCount + uploadCount;
-
-  // ----------------------------------------
-  // 上限チェック
-  // ----------------------------------------
-
-  if (
-    nextCount > event.max_upload_count
-  ) {
-    const remaining =
-      Math.max(
-        event.max_upload_count -
-          currentCount,
-        0,
-      );
+  // 上限チェック（アップロード後に上限を超える場合）
+  if ( nextCount > event.max_upload_count ) {
+    const remaining = Math.max( event.max_upload_count - currentCount, 0);
 
     return {
       allowed: false,
       remaining,
-      maxUploadCount:
-        event.max_upload_count,
+      maxUploadCount: event.max_upload_count,
       currentCount,
     };
   }
 
+  // 上限チェック（アップロード後に上限を超えない場合）
   return {
     allowed: true,
-    remaining:
-      event.max_upload_count -
-      nextCount,
-    maxUploadCount:
-      event.max_upload_count,
+    remaining: event.max_upload_count - nextCount,
+    maxUploadCount: event.max_upload_count,
     currentCount,
   };
 }
 
+
+// ----------------------------------------
+// アップロード上限取得
+// ----------------------------------------
 export async function getPhotoUploadLimit(
   eventId: string,
 ) {
   const supabase = await createClient();
 
-  // ----------------------------------------
-  // イベント取得
-  // ----------------------------------------
-
+  // イベント情報取得（イベント、作成者、アップロード上限）
   const { data: event, error: eventError } =
     await supabase
       .from("events")
@@ -415,10 +345,7 @@ export async function getPhotoUploadLimit(
     );
   }
 
-  // ----------------------------------------
-  // 管理者イベント
-  // ----------------------------------------
-
+  //==管理者イベント==//
   const isAdminEvent =
     event.user_id ===
     process.env.SHUTTERCHANCE_ADMIN_USER_ID;
@@ -432,10 +359,7 @@ export async function getPhotoUploadLimit(
     };
   }
 
-  // ----------------------------------------
-  // 現在の写真枚数
-  // ----------------------------------------
-
+  //==管理者以外==//
   const { count, error: countError } =
     await supabase
       .from("photos")
@@ -453,20 +377,20 @@ export async function getPhotoUploadLimit(
 
   const currentCount = count ?? 0;
 
-  const remaining = Math.max(
-    event.max_upload_count - currentCount,
-    0,
-  );
+  const remaining = Math.max(event.max_upload_count - currentCount, 0);
 
   return {
     unlimited: false,
     currentCount,
-    maxUploadCount:
-      event.max_upload_count,
+    maxUploadCount: event.max_upload_count,
     remaining,
   };
 }
 
+
+// ----------------------------------------
+// イベントプラン情報取得
+// ----------------------------------------
 export async function getEventPlans() {
   const supabase = await createClient();
 
