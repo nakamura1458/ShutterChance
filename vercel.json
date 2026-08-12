@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/admin/photo-retention",
+      "schedule": "0 18 * * *"
+    }
+  ]
+}
