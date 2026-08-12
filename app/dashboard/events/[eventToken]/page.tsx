@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getMyEventByToken } from "@/services/event.service";
 import EventSettings from "@/components/event/EventSettings";
+import EventDeleteButton from "@/components/event/EventDeleteButton";
 
 type Props = {
   params: Promise<{
@@ -130,6 +131,23 @@ export default async function EventDashboardPage({
           plan={plan}
           currentPhotoCount={currentPhotoCount}
         />
+
+        <div className="mt-10 border-t border-gray-200 pt-8">
+          <h2 className="text-lg font-semibold text-gray-900">
+            危険な操作
+          </h2>
+
+          <p className="mt-2 text-sm text-gray-500">
+            イベントを削除すると、イベント情報とアップロードされた写真がすべて削除されます。<br/>
+            ⚠️この操作は復元できません。
+          </p>
+
+          <div className="mt-4">
+            <EventDeleteButton
+              eventToken={event.event_token}
+            />
+          </div>
+        </div>
       </div>
     </main>
   );

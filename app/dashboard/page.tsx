@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
-
 import { getMyEvents } from "@/services/event.service";
+import EventDeleteButton from "@/components/event/EventDeleteButton";
 
 import Link from "next/link";
 
@@ -101,13 +101,17 @@ export default async function DashboardPage() {
                     /e/{event.event_token}
                   </p>
 
-                  <div className="mt-6 flex gap-3">
+                  <div className="mt-6 flex flex-wrap gap-3">
                     <Link
                       href={`/dashboard/events/${event.event_token}`}
                       className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
                     >
                       イベントを管理
                     </Link>
+
+                    <EventDeleteButton
+                      eventToken={event.event_token}
+                    />
                   </div>
                 </div>
               ))}
