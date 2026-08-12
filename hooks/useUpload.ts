@@ -84,14 +84,6 @@ export function useUpload({
             // アップロード前に画像を圧縮
             const compressedFile = await compressImage(file);
 
-            console.log(
-              "画像圧縮:",
-              file.name,
-              `${(file.size / 1024 / 1024).toFixed(2)}MB`,
-              "→",
-              `${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`,
-            );
-
             // 圧縮後のファイルをアップロード
             await uploadPhoto(
               eventId,
