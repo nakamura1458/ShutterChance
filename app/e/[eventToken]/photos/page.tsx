@@ -24,6 +24,7 @@ type Props = {
   }>;
   searchParams: Promise<{
     page?: string;
+    sort?: string;
   }>;
 };
 
@@ -34,12 +35,13 @@ export default async function PhotosPage({
   searchParams,
 }: Props) {
   const { eventToken } = await params;
-  const { page: pageParam } = await searchParams;
+  const {page: pageParam, sort: sortParam} = await searchParams;
 
-  const page = Math.max(
-    1,
-    Number(pageParam) || 1
-  );
+  const page = Math.max(1, Number(pageParam) || 1);
+
+  const sort = sortParam === "oldest" || sortParam === "likes"
+    ? sortParam
+    : "newest";
 
   const event = await getEventByToken(eventToken);
 
@@ -59,7 +61,8 @@ export default async function PhotosPage({
   } = await getPhotosPaginated(
     event.id,
     page,
-    PAGE_SIZE
+    PAGE_SIZE,
+    sort
   );
 
   const totalPages = Math.ceil(
@@ -158,7 +161,7 @@ export default async function PhotosPage({
             {/* 前へ */}
             {page > 1 ? (
               <Link
-                href={`/e/${eventToken}/photos?page=${page - 1}`}
+                href={`/e/${eventToken}/photos?page=${page - 1}&sort=${sort}`}
                 className="
                   px-3
                   py-2
@@ -206,7 +209,7 @@ export default async function PhotosPage({
               return (
                 <Link
                   key={pageNumber}
-                  href={`/e/${eventToken}/photos?page=${pageNumber}`}
+                  href={`/e/${eventToken}/photos?page=${pageNumber}&sort=${sort}`}
                   className={`
                     flex
                     h-9
@@ -231,7 +234,7 @@ export default async function PhotosPage({
             {/* 次へ */}
             {page < totalPages ? (
               <Link
-                href={`/e/${eventToken}/photos?page=${page + 1}`}
+                href={`/e/${eventToken}/photos?page=${page + 1}&sort=${sort}`}
                 className="
                   px-3
                   py-2

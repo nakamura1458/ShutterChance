@@ -13,6 +13,7 @@ type Props = {
   eventId: string;
   eventToken: string;
   initialPhotos: PhotoListItem[];
+  totalPhotoCount: number;
   eventStartAt: string | null;
   eventDeadline: string | null;
 };
@@ -21,11 +22,11 @@ export default function PhotoPageClient({
   eventId,
   eventToken,
   initialPhotos,
+  totalPhotoCount,
   eventStartAt,
   eventDeadline,
-}: Props) {
-  const [photos, setPhotos] =
-    useState(initialPhotos);
+}: Props){
+  const [photos, setPhotos] = useState(initialPhotos);
 
   async function reloadPhotos() {
     const latest = await fetchPhotos(eventId);
@@ -97,7 +98,7 @@ export default function PhotoPageClient({
           eventToken={eventToken}
         />
 
-        {photos.length > 12 && (
+        {totalPhotoCount > 12 && (
           <div className="pr-1 text-right">
             <Link
               href={`/e/${eventToken}/photos`}

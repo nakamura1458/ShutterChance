@@ -15,8 +15,12 @@ import PhotoSelectionBar from "./selection/PhotoSelectionBar";
 
 import { usePhotoFilter } from "@/hooks/usePhotoFilter";
 import { usePhotoSelection } from "@/hooks/usePhotoSelection";
-
+import type { PhotoSortOrder } from "@/hooks/usePhotoSort";
 import type { PhotoListItem } from "@/types/photo";
+import PhotoSortButton from "./sort/PhotoSortButton";
+import PhotoSortSheet from "./sort/PhotoSortSheet";
+
+import { usePhotoSort } from "@/hooks/usePhotoSort";
 
 type Props = {
   photos: PhotoListItem[];
@@ -29,17 +33,10 @@ export default function PhotoList({
   showFilter = false,
   eventToken
 }: Props) {
-  // ========================================
   // Viewer
-  // ========================================
+  const [currentIndex, setCurrentIndex] = useState<number | null>(null);
 
-  const [currentIndex, setCurrentIndex] =
-    useState<number | null>(null);
-
-  // ========================================
   // Filter
-  // ========================================
-
   const {
     selectedGuestNames,
     pendingGuestNames,
@@ -55,6 +52,16 @@ export default function PhotoList({
     selectAllGuests,
     applyFilter,
   } = usePhotoFilter(photos);
+
+  // Sort
+  const [isSortOpen, setIsSortOpen] = useState(false);
+
+  const {
+    sortOrder,
+    sortedPhotos,
+    sortLabel,
+    setSortOrder,
+  } = usePhotoSort(filteredPhotos);
 
   // ========================================
   // Selection
@@ -98,7 +105,7 @@ export default function PhotoList({
           />
         ) : (
           <NormalHeader
-            photoCount={filteredPhotos.length}
+            photoCount={sortedPhotos.length}
             showFilter={showFilter}
             filterLabel={filterLabel}
             hasFilter={
@@ -108,6 +115,9 @@ export default function PhotoList({
             onEnterSelection={
               enterSelectionMode
             }
+            sortOrder={sortOrder}
+            sortLabel={sortLabel}
+            onOpenSort={() => setIsSortOpen(true)}
           />
         )}
       </div>
@@ -115,8 +125,7 @@ export default function PhotoList({
       {/* ======================================
           Photo Grid
       ====================================== */}
-
-      {filteredPhotos.length === 0 ? (
+      {sortedPhotos.length === 0 ? (
         <EmptyState />
       ) : (
         <div
@@ -127,7 +136,7 @@ export default function PhotoList({
             sm:gap-2
           "
         >
-          {filteredPhotos.map(
+          {sortedPhotos.map(
             (photo, index) => (
               <PhotoCard
                 key={photo.id}
@@ -157,7 +166,7 @@ export default function PhotoList({
 
       {currentIndex !== null && (
         <FullscreenPhotoViewer
-          photos={filteredPhotos}
+          photos={sortedPhotos}
           currentIndex={currentIndex}
           eventToken={eventToken}
           onPrevious={() =>
@@ -171,7 +180,7 @@ export default function PhotoList({
             setCurrentIndex((prev) =>
               prev !== null &&
               prev <
-                filteredPhotos.length - 1
+                sortedPhotos.length - 1
                 ? prev + 1
                 : prev
             )
@@ -207,6 +216,13 @@ export default function PhotoList({
         />
       )}
 
+      <PhotoSortSheet
+        open={isSortOpen}
+        currentSort={sortOrder}
+        onClose={() => setIsSortOpen(false)}
+        onChange={setSortOrder}
+      />
+
       {/* ======================================
           Selection Bar
       ====================================== */}
@@ -235,6 +251,9 @@ type NormalHeaderProps = {
   hasFilter: boolean;
   onOpenFilter: () => void;
   onEnterSelection: () => void;
+  sortOrder: PhotoSortOrder;
+  sortLabel: string;
+  onOpenSort: () => void;
 };
 
 function NormalHeader({
@@ -244,6 +263,9 @@ function NormalHeader({
   hasFilter,
   onOpenFilter,
   onEnterSelection,
+  sortOrder,
+  sortLabel,
+  onOpenSort,
 }: NormalHeaderProps) {
   return (
     <>
@@ -269,6 +291,14 @@ function NormalHeader({
             label={filterLabel}
             active={hasFilter}
             onClick={onOpenFilter}
+          />
+        )}
+
+        {showFilter && (
+          <PhotoSortButton
+            label={sortLabel}
+            active={sortOrder !== "newest"}
+            onClick={onOpenSort}
           />
         )}
 
