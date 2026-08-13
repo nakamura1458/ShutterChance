@@ -93,7 +93,8 @@ export default function PhotoPageClient({
 
       <div className="space-y-3">
         <PhotoList
-          photos={photos.slice(0, 12)}
+          photos={photos.slice(0,12)}
+          eventToken={eventToken}
         />
 
         {photos.length > 12 && (

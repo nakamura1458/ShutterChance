@@ -21,11 +21,13 @@ import type { PhotoListItem } from "@/types/photo";
 type Props = {
   photos: PhotoListItem[];
   showFilter?: boolean;
+  eventToken: string;
 };
 
 export default function PhotoList({
   photos,
   showFilter = false,
+  eventToken
 }: Props) {
   // ========================================
   // Viewer
@@ -130,17 +132,14 @@ export default function PhotoList({
               <PhotoCard
                 key={photo.id}
                 photo={photo}
-                selectionMode={
-                  selectionMode
-                }
+                eventToken={eventToken}
+                selectionMode={selectionMode}
                 selected={selectedIds.includes(
                   photo.id
                 )}
                 onClick={() => {
                   if (selectionMode) {
-                    toggleSelection(
-                      photo.id
-                    );
+                    toggleSelection(photo.id);
                     return;
                   }
 

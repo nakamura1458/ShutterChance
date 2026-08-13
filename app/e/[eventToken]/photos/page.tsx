@@ -149,6 +149,7 @@ export default async function PhotosPage({
         <PhotoList
           photos={photos}
           showFilter
+          eventToken={eventToken}
         />
 
         {totalPages > 1 && (
