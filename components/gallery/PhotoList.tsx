@@ -159,6 +159,7 @@ export default function PhotoList({
         <FullscreenPhotoViewer
           photos={filteredPhotos}
           currentIndex={currentIndex}
+          eventToken={eventToken}
           onPrevious={() =>
             setCurrentIndex((prev) =>
               prev !== null && prev > 0
