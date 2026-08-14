@@ -5,7 +5,9 @@ import { useMemo, useState } from "react";
 import type { PhotoListItem } from "@/types/photo";
 
 export function usePhotoFilter(
-  photos: PhotoListItem[]
+  photos: PhotoListItem[],
+  guestPhotoCounts: Record<string, number>,
+  totalPhotoCount: number
 ) {
   // ========================================
   // Applied Filter
@@ -48,10 +50,7 @@ export function usePhotoFilter(
     return Array.from(
       new Set(
         photos
-          .map(
-            (photo) =>
-              photo.guest_name
-          )
+          .map((photo) => photo.guest_name)
           .filter(
             (name): name is string =>
               Boolean(name)
@@ -63,45 +62,19 @@ export function usePhotoFilter(
   }, [photos]);
 
   // ========================================
-  // Guest Photo Counts
-  // ========================================
-
-  const guestPhotoCounts = useMemo(() => {
-    const counts: Record<
-      string,
-      number
-    > = {};
-
-    photos.forEach((photo) => {
-      if (!photo.guest_name) {
-        return;
-      }
-
-      counts[photo.guest_name] =
-        (counts[photo.guest_name] ?? 0) +
-        1;
-    });
-
-    return counts;
-  }, [photos]);
-
-  // ========================================
   // Filtered Photos
   // ========================================
 
   const filteredPhotos = useMemo(() => {
     // フィルターなし
-    if (
-      selectedGuestNames.length ===
-      0
-    ) {
+    if (selectedGuestNames.length === 0) {
       return photos;
     }
 
     // 複数選択の場合は OR
     //
-    // guest_name が null の写真は
-    // フィルター対象から除外
+    // 現時点ではページ内の写真から
+    // フィルター対象を取得
     return photos.filter(
       (photo) =>
         photo.guest_name !== null &&
@@ -121,27 +94,22 @@ export function usePhotoFilter(
   const pendingFilteredPhotoCount =
     useMemo(() => {
       // 全員
-      if (
-        pendingGuestNames.length ===
-        0
-      ) {
-        return photos.length;
+      if (pendingGuestNames.length === 0) {
+        return totalPhotoCount;
       }
 
-      // 選択された人だけ
-      //
-      // guest_name が null の写真は
-      // フィルター対象から除外
-      return photos.filter(
-        (photo) =>
-          photo.guest_name !== null &&
-          pendingGuestNames.includes(
-            photo.guest_name
-          )
-      ).length;
+      // 選択されたゲストの
+      // DB全体の写真枚数を合計
+      return pendingGuestNames.reduce(
+        (total, guestName) =>
+          total +
+          (guestPhotoCounts[guestName] ?? 0),
+        0
+      );
     }, [
-      photos,
       pendingGuestNames,
+      guestPhotoCounts,
+      totalPhotoCount,
     ]);
 
   // ========================================
@@ -150,18 +118,12 @@ export function usePhotoFilter(
 
   const filterLabel = useMemo(() => {
     // 全員
-    if (
-      selectedGuestNames.length ===
-      0
-    ) {
+    if (selectedGuestNames.length === 0) {
       return "すべて";
     }
 
     // 1人
-    if (
-      selectedGuestNames.length ===
-      1
-    ) {
+    if (selectedGuestNames.length === 1) {
       return selectedGuestNames[0];
     }
 
@@ -172,13 +134,13 @@ export function usePhotoFilter(
   // ========================================
   // Open Filter
   // ========================================
-
-  const openFilter = () => {
-    // 現在適用されているフィルターを
-    // 一時選択状態にコピー
-    setPendingGuestNames([
-      ...selectedGuestNames,
-    ]);
+  const openFilter = (
+    guestNamesFromUrl?: string[]
+  ) => {
+    setPendingGuestNames(
+      guestNamesFromUrl ??
+        selectedGuestNames
+    );
 
     setIsFilterOpen(true);
   };
@@ -203,8 +165,7 @@ export function usePhotoFilter(
       // → 選択解除
       if (prev.includes(guestName)) {
         return prev.filter(
-          (name) =>
-            name !== guestName
+          (name) => name !== guestName
         );
       }
 
@@ -231,6 +192,11 @@ export function usePhotoFilter(
   // ========================================
 
   const applyFilter = () => {
+    console.log(
+      "pendingGuestNames:",
+      pendingGuestNames
+    );
+
     setSelectedGuestNames([
       ...pendingGuestNames,
     ]);
@@ -249,6 +215,8 @@ export function usePhotoFilter(
     filteredPhotos,
 
     guestNames,
+
+    // DB全体のゲスト別枚数
     guestPhotoCounts,
 
     filterLabel,

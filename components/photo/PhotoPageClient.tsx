@@ -96,6 +96,7 @@ export default function PhotoPageClient({
         <PhotoList
           photos={photos.slice(0,12)}
           eventToken={eventToken}
+          totalPhotoCount={totalPhotoCount}
         />
 
         {totalPhotoCount > 12 && (

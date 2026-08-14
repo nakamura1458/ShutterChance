@@ -20,14 +20,17 @@ export default function PhotoFilterButton({
     <button
       type="button"
       onClick={onClick}
+      aria-label={label}
       className={`
         inline-flex
         items-center
-        gap-1.5
+        justify-center
         rounded-full
         border
-        px-3
-        py-1.5
+        p-2
+        sm:gap-1.5
+        sm:px-3
+        sm:py-1.5
         text-xs
         font-medium
         shadow-sm
@@ -51,7 +54,7 @@ export default function PhotoFilterButton({
       `}
     >
       <Filter
-        size={13}
+        size={16}
         className={
           active
             ? "text-blue-600"
@@ -59,11 +62,15 @@ export default function PhotoFilterButton({
         }
       />
 
-      <span>{label}</span>
+      <span className="hidden sm:inline">
+        {label}
+      </span>
 
       <ChevronDown
         size={12}
         className="
+          hidden
+          sm:inline
           text-muted-foreground
         "
       />

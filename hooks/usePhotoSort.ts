@@ -1,4 +1,8 @@
-import { useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import type { PhotoListItem } from "@/types/photo";
 
@@ -8,10 +12,16 @@ export type PhotoSortOrder =
   | "likes";
 
 export function usePhotoSort(
-  photos: PhotoListItem[]
+  photos: PhotoListItem[],
+  sortFromUrl: PhotoSortOrder = "newest"
 ) {
   const [sortOrder, setSortOrder] =
-    useState<PhotoSortOrder>("newest");
+    useState<PhotoSortOrder>(sortFromUrl);
+
+  // URLのsortと同期
+  useEffect(() => {
+    setSortOrder(sortFromUrl);
+  }, [sortFromUrl]);
 
   const sortedPhotos = useMemo(() => {
     const result = [...photos];

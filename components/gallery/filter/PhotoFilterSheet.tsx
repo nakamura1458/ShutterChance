@@ -430,7 +430,7 @@ export default function PhotoFilterSheet({
             "
           >
             {isAllSelected
-              ? `すべての写真を表示（${totalPhotoCount}枚）`
+              ? "すべて"
               : `${pendingGuestNames.length}人の写真を表示（${pendingPhotoCount}枚）`}
           </button>
 

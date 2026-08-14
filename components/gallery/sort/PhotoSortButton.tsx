@@ -17,27 +17,48 @@ export default function PhotoSortButton({
     <button
       type="button"
       onClick={onClick}
+      aria-label={label}
       className={`
-        flex
+        inline-flex
         items-center
-        gap-1.5
+        justify-center
         rounded-full
         border
-        px-3
-        py-1.5
-        text-sm
+        p-2
+        sm:gap-1.5
+        sm:px-3
+        sm:py-1.5
+        text-xs
         font-medium
+        shadow-sm
         transition
         active:scale-95
         ${
           active
-            ? "border-blue-200 bg-blue-50 text-blue-600"
-            : "border-zinc-200 bg-white text-zinc-700"
+            ? `
+              border-blue-200
+              bg-blue-50
+              text-blue-600
+              dark:border-blue-900
+              dark:bg-blue-950/30
+              dark:text-blue-400
+            `
+            : `
+              border-zinc-200
+              bg-white
+              text-zinc-700
+              dark:border-zinc-800
+              dark:bg-background
+              dark:text-zinc-300
+            `
         }
       `}
     >
-      <ArrowDownUp size={15} />
-      {label}
+      <ArrowDownUp size={16} />
+
+      <span className="hidden sm:inline">
+        {label}
+      </span>
     </button>
   );
 }

@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
+import {
   CheckSquare,
   Square,
 } from "lucide-react";
@@ -26,13 +30,29 @@ type Props = {
   photos: PhotoListItem[];
   showFilter?: boolean;
   eventToken: string;
+  guestPhotoCounts?: Record<string, number>;
+  totalPhotoCount: number;
 };
 
 export default function PhotoList({
   photos,
   showFilter = false,
-  eventToken
+  eventToken,
+  guestPhotoCounts,
+  totalPhotoCount,
 }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const selectedGuestsFromUrl = searchParams.getAll("guest");
+
+  const urlFilterLabel =
+    selectedGuestsFromUrl.length === 0
+      ? "すべて"
+      : selectedGuestsFromUrl.length === 1
+        ? selectedGuestsFromUrl[0]
+        : `${selectedGuestsFromUrl.length}人選択中`;
+  
   // Viewer
   const [currentIndex, setCurrentIndex] = useState<number | null>(null);
 
@@ -42,7 +62,6 @@ export default function PhotoList({
     pendingGuestNames,
     filteredPhotos,
     guestNames,
-    guestPhotoCounts,
     filterLabel,
     isFilterOpen,
     pendingFilteredPhotoCount,
@@ -51,17 +70,100 @@ export default function PhotoList({
     toggleGuest,
     selectAllGuests,
     applyFilter,
-  } = usePhotoFilter(photos);
+  } = usePhotoFilter(
+    photos,
+    guestPhotoCounts ?? {},
+    totalPhotoCount
+  );
+
+  const allGuestNames = Object.keys(
+    guestPhotoCounts ?? {}
+  ).sort((a, b) =>
+    a.localeCompare(b, "ja")
+  );
 
   // Sort
   const [isSortOpen, setIsSortOpen] = useState(false);
 
+  // const {
+  //   sortOrder,
+  //   sortedPhotos,
+  //   sortLabel,
+  //   setSortOrder,
+  // } = usePhotoSort(photos);
+
+  const sortFromUrl =
+    (searchParams.get("sort") as PhotoSortOrder) ??
+    "newest";
+
   const {
-    sortOrder,
     sortedPhotos,
-    sortLabel,
     setSortOrder,
-  } = usePhotoSort(filteredPhotos);
+  } = usePhotoSort(
+    photos,
+    sortFromUrl
+  );
+
+  const sortOrder = sortFromUrl;
+
+  const sortLabel = {
+    newest: "新しい順",
+    oldest: "古い順",
+    likes: "いいね数順",
+  }[sortOrder];
+
+  // ソート（ページング反映用）
+  const handleChangeSort = (
+    newSort: PhotoSortOrder
+  ) => {
+    const params = new URLSearchParams();
+
+    // ソート変更時は1ページ目
+    params.set("page", "1");
+
+    // newestはデフォルトなのでURLに不要
+    if (newSort !== "newest") {
+      params.set("sort", newSort);
+    }
+
+    // 現在のフィルターを維持
+    selectedGuestNames.forEach((guestName) => {
+      params.append("guest", guestName);
+    });
+
+    router.push(
+      `/e/${eventToken}/photos?${params.toString()}`
+    );
+
+    setSortOrder(newSort);
+    setIsSortOpen(false);
+  };
+
+  // フィルター（＠エージング反映用）
+  const handleApplyFilter = () => {
+    const params = new URLSearchParams();
+
+    // ページを1ページ目に戻す
+    params.set("page", "1");
+
+    // 現在の並び順を維持
+    if (sortOrder !== "newest") {
+      params.set("sort", sortOrder);
+    }
+
+    // 選択したゲストをURLに追加
+    pendingGuestNames.forEach((guestName) => {
+      params.append("guest", guestName);
+    });
+
+    // フィルター画面を閉じる
+    closeFilter();
+
+    // URLを更新
+    router.push(
+      `/e/${eventToken}/photos?${params.toString()}`
+    );
+  };
 
   // ========================================
   // Selection
@@ -105,13 +207,15 @@ export default function PhotoList({
           />
         ) : (
           <NormalHeader
-            photoCount={sortedPhotos.length}
+            photoCount={totalPhotoCount}
             showFilter={showFilter}
-            filterLabel={filterLabel}
+            filterLabel={urlFilterLabel}
             hasFilter={
-              selectedGuestNames.length > 0
+              selectedGuestsFromUrl.length > 0
             }
-            onOpenFilter={openFilter}
+            onOpenFilter={() =>
+              openFilter(selectedGuestsFromUrl)
+            }
             onEnterSelection={
               enterSelectionMode
             }
@@ -198,9 +302,9 @@ export default function PhotoList({
       {showFilter && (
         <PhotoFilterSheet
           open={isFilterOpen}
-          guestNames={guestNames}
+          guestNames={allGuestNames}
           guestPhotoCounts={
-            guestPhotoCounts
+            guestPhotoCounts ?? {}
           }
           pendingGuestNames={
             pendingGuestNames
@@ -208,11 +312,11 @@ export default function PhotoList({
           pendingPhotoCount={
             pendingFilteredPhotoCount
           }
-          totalPhotoCount={photos.length}
+          totalPhotoCount={totalPhotoCount}
           onClose={closeFilter}
           onToggleGuest={toggleGuest}
           onSelectAll={selectAllGuests}
-          onApply={applyFilter}
+          onApply={handleApplyFilter}
         />
       )}
 
@@ -220,7 +324,7 @@ export default function PhotoList({
         open={isSortOpen}
         currentSort={sortOrder}
         onClose={() => setIsSortOpen(false)}
-        onChange={setSortOrder}
+        onChange={handleChangeSort}
       />
 
       {/* ======================================
@@ -302,15 +406,17 @@ function NormalHeader({
           />
         )}
 
-        <p
-          className="
-            whitespace-nowrap
-            text-sm
-            text-muted-foreground
-          "
-        >
-          {photoCount} Photos
-        </p>
+        {hasFilter && (
+          <p
+            className="
+              whitespace-nowrap
+              text-sm
+              text-muted-foreground
+            "
+          >
+            {photoCount} 枚
+          </p>
+        )}
 
         <button
           type="button"

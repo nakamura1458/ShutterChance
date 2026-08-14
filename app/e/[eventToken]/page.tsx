@@ -121,7 +121,6 @@ export default async function EventPage({
           eventId={event.id}
           eventToken={event.event_token}
           initialPhotos={photos}
-          // totalPhotoCount={totalCount}
           totalPhotoCount={photos.length}
           eventStartAt={event.event_start_at}
           eventDeadline={event.event_deadline}

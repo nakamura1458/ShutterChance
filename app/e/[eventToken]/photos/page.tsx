@@ -1,7 +1,10 @@
 import Link from "next/link";
 
 import { getEventByToken } from "@/services/event.service";
-import { getPhotosPaginated } from "@/services/photo.service";
+import {
+  getPhotosPaginated,
+  getGuestPhotoCounts,
+} from "@/services/photo.service";
 import PhotoList from "@/components/gallery/PhotoList";
 import { Link as LinkIcon, CircleHelp } from "lucide-react";
 import {
@@ -25,6 +28,7 @@ type Props = {
   searchParams: Promise<{
     page?: string;
     sort?: string;
+    guest?: string | string[];
   }>;
 };
 
@@ -35,15 +39,38 @@ export default async function PhotosPage({
   searchParams,
 }: Props) {
   const { eventToken } = await params;
-  const {page: pageParam, sort: sortParam} = await searchParams;
+  const {page: pageParam, sort: sortParam, guest: guestParam} = await searchParams;
 
   const page = Math.max(1, Number(pageParam) || 1);
 
   const sort = sortParam === "oldest" || sortParam === "likes"
     ? sortParam
     : "newest";
+  
+  const guestNames =
+    guestParam === undefined
+      ? []
+      : Array.isArray(guestParam)
+        ? guestParam
+        : [guestParam];
 
   const event = await getEventByToken(eventToken);
+
+  const createPageUrl = (targetPage: number) => {
+    const params = new URLSearchParams();
+
+    params.set("page", String(targetPage));
+
+    if (sort !== "newest") {
+      params.set("sort", sort);
+    }
+
+    guestNames.forEach((guestName) => {
+      params.append("guest", guestName);
+    });
+
+    return `/e/${eventToken}/photos?${params.toString()}`;
+  };
 
   if (!event) {
     return (
@@ -55,19 +82,11 @@ export default async function PhotosPage({
     );
   }
 
-  const {
-    photos,
-    totalCount,
-  } = await getPhotosPaginated(
-    event.id,
-    page,
-    PAGE_SIZE,
-    sort
-  );
+  const {photos, totalCount} = await getPhotosPaginated(event.id, page, PAGE_SIZE, sort, guestNames);
 
-  const totalPages = Math.ceil(
-    totalCount / PAGE_SIZE
-  );
+  const guestPhotoCounts = await getGuestPhotoCounts(event.id);
+
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   const pageNumbers: (number | "ellipsis")[] = [];
 
@@ -153,6 +172,8 @@ export default async function PhotosPage({
           photos={photos}
           showFilter
           eventToken={eventToken}
+          guestPhotoCounts={guestPhotoCounts}
+          totalPhotoCount={totalCount}
         />
 
         {totalPages > 1 && (
@@ -161,7 +182,7 @@ export default async function PhotosPage({
             {/* 前へ */}
             {page > 1 ? (
               <Link
-                href={`/e/${eventToken}/photos?page=${page - 1}&sort=${sort}`}
+                href={createPageUrl(page - 1)}
                 className="
                   px-3
                   py-2
@@ -209,7 +230,7 @@ export default async function PhotosPage({
               return (
                 <Link
                   key={pageNumber}
-                  href={`/e/${eventToken}/photos?page=${pageNumber}&sort=${sort}`}
+                  href={createPageUrl(pageNumber)}
                   className={`
                     flex
                     h-9
@@ -234,7 +255,7 @@ export default async function PhotosPage({
             {/* 次へ */}
             {page < totalPages ? (
               <Link
-                href={`/e/${eventToken}/photos?page=${page + 1}&sort=${sort}`}
+                href={createPageUrl(page + 1)}
                 className="
                   px-3
                   py-2

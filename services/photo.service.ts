@@ -49,13 +49,13 @@ export async function getPhotos(
 // 写真一覧取得
 // ページング・並び替え対応
 // ========================================
-
 export async function getPhotosPaginated(
   eventId: string,
   page: number,
   pageSize: number = 60,
-  sort: PhotoSortOrder = "newest"
-) {
+  sort: PhotoSortOrder = "newest",
+  guestNames: string[] = []
+){
   const supabase = await createClient();
 
   // ========================================
@@ -70,6 +70,7 @@ export async function getPhotosPaginated(
         p_page: page,
         p_page_size: pageSize,
         p_sort: sort,
+        p_guest_names: guestNames,
       }
     );
 
@@ -100,17 +101,15 @@ export async function getPhotosPaginated(
   // ========================================
   // Total count
   // ========================================
-
-  const {
-    count,
-    error: countError,
-  } = await supabase
+  const countQuery = supabase
     .from("photos")
     .select("id", {
       count: "exact",
       head: true,
     })
     .eq("event_id", eventId);
+
+  const {count, error: countError} = await countQuery;
 
   if (countError) {
     throw countError;
@@ -120,4 +119,41 @@ export async function getPhotosPaginated(
     photos,
     totalCount: count ?? 0,
   };
+}
+
+
+// ========================================
+// ゲスト別写真枚数取得
+// ========================================
+
+export async function getGuestPhotoCounts(
+  eventId: string
+): Promise<Record<string, number>> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.rpc(
+    "get_event_photo_guest_counts",
+    {
+      p_event_id: eventId,
+    }
+  );
+
+  if (error) {
+    throw error;
+  }
+
+  const counts: Record<string, number> = {};
+
+  (data ?? []).forEach(
+    (row: {
+      guest_name: string;
+      photo_count: number | string;
+    }) => {
+      counts[row.guest_name] = Number(
+        row.photo_count
+      );
+    }
+  );
+
+  return counts;
 }
