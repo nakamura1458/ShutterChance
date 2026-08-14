@@ -2,6 +2,7 @@
 
 import {
   FormEvent,
+  Suspense,
   useEffect,
   useState,
 } from "react";
@@ -68,7 +69,7 @@ function getMaxDate(startDate: string) {
   return `${year}-${month}-${day}`;
 }
 
-export default function NewEventPage() {
+function NewEventPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -83,9 +84,6 @@ export default function NewEventPage() {
   // イベント開始日
   const minDate = getTodayDate();
   const [eventStartDate, setEventStartDate] = useState(minDate);
-
-  // イベント終了日
-  const [hasEventDeadline, setHasEventDeadline] = useState(false);
 
   const [eventDeadline, setEventDeadline] = useState(getMaxDate(minDate));
 
@@ -390,5 +388,25 @@ export default function NewEventPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function NewEventPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-gray-50">
+          <div className="mx-auto max-w-2xl px-6 py-10">
+            <div className="rounded-2xl bg-white p-8 shadow-sm">
+              <p className="text-sm text-gray-500">
+                読み込み中...
+              </p>
+            </div>
+          </div>
+        </main>
+      }
+    >
+      <NewEventPageContent />
+    </Suspense>
   );
 }
