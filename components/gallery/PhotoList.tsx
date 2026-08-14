@@ -24,8 +24,6 @@ import type { PhotoListItem } from "@/types/photo";
 import PhotoSortButton from "./sort/PhotoSortButton";
 import PhotoSortSheet from "./sort/PhotoSortSheet";
 
-import { usePhotoSort } from "@/hooks/usePhotoSort";
-
 type Props = {
   photos: PhotoListItem[];
   showFilter?: boolean;
@@ -85,24 +83,11 @@ export default function PhotoList({
   // Sort
   const [isSortOpen, setIsSortOpen] = useState(false);
 
-  // const {
-  //   sortOrder,
-  //   sortedPhotos,
-  //   sortLabel,
-  //   setSortOrder,
-  // } = usePhotoSort(photos);
-
   const sortFromUrl =
     (searchParams.get("sort") as PhotoSortOrder) ??
     "newest";
 
-  const {
-    sortedPhotos,
-    setSortOrder,
-  } = usePhotoSort(
-    photos,
-    sortFromUrl
-  );
+  const sortedPhotos = photos;
 
   const sortOrder = sortFromUrl;
 
@@ -131,12 +116,14 @@ export default function PhotoList({
       params.append("guest", guestName);
     });
 
-    router.push(
-      `/e/${eventToken}/photos?${params.toString()}`
-    );
-
-    setSortOrder(newSort);
+    // Sheetを閉じる
     setIsSortOpen(false);
+
+    // サーバー側で並び替えた結果を取得
+    router.replace(
+      `/e/${eventToken}/photos?${params.toString()}`,
+      { scroll: false }
+    );
   };
 
   // フィルター（＠エージング反映用）

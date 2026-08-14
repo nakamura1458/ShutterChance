@@ -15,8 +15,7 @@ export function usePhotoSort(
   photos: PhotoListItem[],
   sortFromUrl: PhotoSortOrder = "newest"
 ) {
-  const [sortOrder, setSortOrder] =
-    useState<PhotoSortOrder>(sortFromUrl);
+  const [sortOrder, setSortOrder] = useState<PhotoSortOrder>(sortFromUrl);
 
   // URLのsortと同期
   useEffect(() => {
