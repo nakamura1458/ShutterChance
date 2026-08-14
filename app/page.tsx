@@ -319,15 +319,16 @@ export default function Home() {
             <div className="relative mx-auto w-full max-w-md lg:max-w-lg">
               <div className="absolute -inset-8 rounded-[3rem] bg-gray-50 blur-3xl" />
 
-              <img
-                src="/images/hero-phone.png"
-                alt="ShutterChance"
-                className="relative w-full"
-              />
-
-              <div className="absolute -bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-white px-5 py-3 text-xs font-medium shadow-xl shadow-black/10">
-                <Users className="h-4 w-4" />
-                みんなの写真が集まる
+              {/* Smartphone */}
+              <div className="relative mx-auto h-[520px] w-[260px] overflow-hidden rounded-[2.5rem] border-[8px] border-black bg-black shadow-2xl">
+              {/* スマホ画面 */}
+                <div className="relative h-full w-full overflow-hidden rounded-[2rem] bg-white">
+                  <img
+                    src="/hero-phone.jpg"
+                    alt="ShutterChance"
+                    className="h-full w-full object-contain"
+                  />
+                </div>
               </div>
             </div>
           </div>
