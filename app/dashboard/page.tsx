@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/server";
 import { getMyEvents } from "@/services/event.service";
 import EventDeleteButton from "@/components/event/EventDeleteButton";
-
-import Link from "next/link";
+import BackToHomeButton from "@/components/common/BackToHomeButton";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -22,17 +22,26 @@ export default async function DashboardPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-5xl px-6 py-10">
-        <header className="flex items-center justify-between">
+        {/* =========================
+            Header
+        ========================= */}
+        <header className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-semibold uppercase tracking-[0.25em]">
-              Shutter Chance
-            </h1>
+            {/* トップ画面へ戻る */}
+            <BackToHomeButton />
 
-            <p className="mt-1 text-sm text-gray-500">
-              主催者ダッシュボード
-            </p>
+            <div className="mt-5">
+              <h1 className="text-3xl font-semibold uppercase tracking-[0.25em]">
+                Shutter Chance
+              </h1>
+
+              <p className="mt-1 text-sm text-gray-500">
+                主催者ダッシュボード
+              </p>
+            </div>
           </div>
 
+          {/* Logout */}
           <form
             action={async () => {
               "use server";
@@ -53,6 +62,9 @@ export default async function DashboardPage() {
           </form>
         </header>
 
+        {/* =========================
+            Events
+        ========================= */}
         <section className="mt-12">
           <div className="flex items-center justify-between">
             <div>
@@ -73,6 +85,9 @@ export default async function DashboardPage() {
             </Link>
           </div>
 
+          {/* =========================
+              Empty
+          ========================= */}
           {events.length === 0 ? (
             <div className="mt-8 rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-16 text-center">
               <p className="text-gray-500">
@@ -87,6 +102,9 @@ export default async function DashboardPage() {
               </Link>
             </div>
           ) : (
+            /* =========================
+                Event List
+            ========================= */
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
               {events.map((event) => (
                 <div

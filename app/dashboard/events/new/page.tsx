@@ -6,7 +6,10 @@ import {
   useState,
 } from "react";
 
-import { useRouter } from "next/navigation";
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import PlanSelector from "@/components/dashboard/PlanSelector";
 
 import {
@@ -67,6 +70,7 @@ function getMaxDate(startDate: string) {
 
 export default function NewEventPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // プラン
   const [plan, setPlan] = useState("standard");
@@ -191,6 +195,14 @@ export default function NewEventPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    const planFromQuery = searchParams.get("plan");
+
+    if (planFromQuery) {
+      setPlan(planFromQuery);
+    }
+  }, [searchParams]);
 
   // プラン取得
   useEffect(() => {

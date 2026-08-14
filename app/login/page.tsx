@@ -1,12 +1,14 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { supabase } from "@/lib/supabase/client";
+import BackToHomeButton from "@/components/common/BackToHomeButton";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,89 +32,136 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    const redirectTo =
+      searchParams.get("redirectTo") || "/dashboard";
+
+    router.push(redirectTo);
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white px-6">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-semibold uppercase tracking-[0.25em]">
-            Shutter Chance
-          </h1>
+    <main className="relative min-h-screen bg-white px-6">
+      {/* Back to Home */}
+      <div className="absolute left-6 top-6 sm:left-8 sm:top-8">
+        <BackToHomeButton />
+      </div>
 
-          <p className="mt-2 text-sm text-gray-500">
-            イベント主催者ログイン
+      {/* Login Content */}
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="w-full max-w-md">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-semibold uppercase tracking-[0.25em]">
+              Shutter Chance
+            </h1>
+
+            <p className="mt-2 text-sm text-gray-500">
+              イベント主催者ログイン
+            </p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div>
+              <label
+                htmlFor="email"
+                className="mb-2 block text-sm font-medium"
+              >
+                メールアドレス
+              </label>
+
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="example@example.com"
+                required
+                autoComplete="email"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-black"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="password"
+                className="mb-2 block text-sm font-medium"
+              >
+                パスワード
+              </label>
+
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="パスワード"
+                required
+                autoComplete="current-password"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-black"
+              />
+            </div>
+
+            {error && (
+              <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-xl bg-black px-4 py-3 font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? "ログイン中..." : "ログイン"}
+            </button>
+          </form>
+
+          <p className="mt-4 text-center text-sm">
+            <button
+              type="button"
+              onClick={() => router.push("/forgot-password")}
+              className="text-gray-500 underline underline-offset-4 transition hover:text-gray-900"
+            >
+              パスワードを忘れた場合
+            </button>
+          </p>
+
+          <p className="mt-6 text-center text-sm text-gray-500">
+            アカウントをお持ちでないですか？
+            <button
+              type="button"
+              onClick={() => {
+                const redirectTo = searchParams.get("redirectTo");
+
+                if (redirectTo) {
+                  router.push(
+                    `/signup?redirectTo=${encodeURIComponent(redirectTo)}`
+                  );
+                } else {
+                  router.push("/signup");
+                }
+              }}
+              className="ml-1 font-medium text-black underline underline-offset-4"
+            >
+              アカウントを作成
+            </button>
           </p>
         </div>
-
-        <form onSubmit={handleLogin} className="space-y-5">
-          <div>
-            <label
-              htmlFor="email"
-              className="mb-2 block text-sm font-medium"
-            >
-              メールアドレス
-            </label>
-
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="example@example.com"
-              required
-              autoComplete="email"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-black"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="mb-2 block text-sm font-medium"
-            >
-              パスワード
-            </label>
-
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="パスワード"
-              required
-              autoComplete="current-password"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-black"
-            />
-          </div>
-
-          {error && (
-            <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-xl bg-black px-4 py-3 font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {loading ? "ログイン中..." : "ログイン"}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-gray-500">
-          アカウントをお持ちでないですか？
-          <button
-            type="button"
-            onClick={() => router.push("/signup")}
-            className="ml-1 font-medium text-black underline underline-offset-4"
-          >
-            アカウントを作成
-          </button>
-        </p>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-white">
+          <p className="text-sm text-gray-500">
+            読み込み中...
+          </p>
+        </main>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }
