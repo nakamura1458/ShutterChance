@@ -10,7 +10,14 @@ import { useRouter } from "next/navigation";
 
 import { supabase } from "@/lib/supabase/client";
 
-export default function Header() {
+type HeaderProps = {
+  onCreateEvent: () => void;
+};
+
+export default function Header({
+  onCreateEvent,
+}: HeaderProps) {
+  
   const router = useRouter();
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -52,10 +59,6 @@ export default function Header() {
     router.push("/login");
   };
 
-  const handleSignup = () => {
-    router.push("/signup");
-  };
-
   const handleDashboard = () => {
     router.push("/dashboard");
   };
@@ -91,7 +94,32 @@ export default function Header() {
           {/* =========================
               Desktop Navigation
           ========================= */}
-          <div className="hidden items-center gap-3 sm:flex">
+          <div className="hidden items-center gap-6 sm:flex">
+            {/* Page Navigation */}
+            <nav className="flex items-center gap-6">
+              <a
+                href="#how-it-works"
+                className="text-sm font-medium text-gray-600 transition hover:text-black"
+              >
+                使い方
+              </a>
+
+              <a
+                href="#pricing"
+                className="text-sm font-medium text-gray-600 transition hover:text-black"
+              >
+                料金プラン
+              </a>
+
+              <a
+                href="#faq"
+                className="text-sm font-medium text-gray-600 transition hover:text-black"
+              >
+                よくある質問
+              </a>
+            </nav>
+
+            {/* Auth */}
             {authLoading ? (
               <div className="h-9 w-32 animate-pulse rounded-full bg-gray-100" />
             ) : user ? (
@@ -102,7 +130,7 @@ export default function Header() {
                   onClick={handleDashboard}
                   className="rounded-full border border-gray-200 px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 active:scale-[0.98]"
                 >
-                  ダッシュボード
+                  イベント管理
                 </button>
 
                 {/* Account */}
@@ -127,13 +155,13 @@ export default function Header() {
                   ログイン
                 </button>
 
-                {/* Signup */}
+                {/* Create Event */}
                 <button
                   type="button"
-                  onClick={handleSignup}
+                  onClick={onCreateEvent}
                   className="rounded-full bg-black px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 active:scale-[0.98]"
                 >
-                  会員登録
+                  イベントを作る
                 </button>
               </>
             )}
@@ -181,17 +209,43 @@ export default function Header() {
               <div className="h-12 w-full animate-pulse rounded-xl bg-gray-100" />
             ) : user ? (
               <div className="space-y-3">
+                {/* Page Navigation */}
+                <a
+                  href="#how-it-works"
+                  onClick={() => setMenuOpen(false)}
+                  className="block w-full rounded-xl border border-gray-200 px-4 py-4 font-medium"
+                >
+                  使い方
+                </a>
 
-                {/* Dashboard */}
+                <a
+                  href="#pricing"
+                  onClick={() => setMenuOpen(false)}
+                  className="block w-full rounded-xl border border-gray-200 px-4 py-4 font-medium"
+                >
+                  料金プラン
+                </a>
+
+                <a
+                  href="#faq"
+                  onClick={() => setMenuOpen(false)}
+                  className="block w-full rounded-xl border border-gray-200 px-4 py-4 font-medium"
+                >
+                  よくある質問
+                </a>
+
+                <div className="my-5 border-t border-gray-100" />
+
+                {/* Event Management */}
                 <button
                   type="button"
                   onClick={() => {
                     setMenuOpen(false);
                     handleDashboard();
                   }}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-4 text-left font-medium"
+                  className="w-full rounded-xl bg-black px-4 py-4 text-left font-medium text-white"
                 >
-                  ダッシュボード
+                  イベント管理
                 </button>
 
                 {/* Account */}
@@ -206,13 +260,38 @@ export default function Header() {
                   <CircleUserRound className="h-5 w-5" />
 
                   <span>
-                    アカウント
+                    アカウント設定
                   </span>
                 </button>
-
               </div>
             ) : (
               <div className="space-y-3">
+                {/* Page Navigation */}
+                <a
+                  href="#how-it-works"
+                  onClick={() => setMenuOpen(false)}
+                  className="block w-full rounded-xl border border-gray-200 px-4 py-4 font-medium"
+                >
+                  使い方
+                </a>
+
+                <a
+                  href="#pricing"
+                  onClick={() => setMenuOpen(false)}
+                  className="block w-full rounded-xl border border-gray-200 px-4 py-4 font-medium"
+                >
+                  料金プラン
+                </a>
+
+                <a
+                  href="#faq"
+                  onClick={() => setMenuOpen(false)}
+                  className="block w-full rounded-xl border border-gray-200 px-4 py-4 font-medium"
+                >
+                  よくある質問
+                </a>
+
+                <div className="my-5 border-t border-gray-100" />
 
                 {/* Login */}
                 <button
@@ -226,18 +305,17 @@ export default function Header() {
                   ログイン
                 </button>
 
-                {/* Signup */}
+                {/* Create Event */}
                 <button
                   type="button"
                   onClick={() => {
                     setMenuOpen(false);
-                    handleSignup();
+                    onCreateEvent();
                   }}
                   className="w-full rounded-xl bg-black px-4 py-4 font-medium text-white"
                 >
-                  会員登録
+                  イベントを作る
                 </button>
-
               </div>
             )}
           </div>
