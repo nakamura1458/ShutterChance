@@ -12,6 +12,7 @@ import {
 import type { PhotoListItem } from "@/types/photo";
 import { savePhotos } from "@/lib/utils/savePhotos";
 import LikeButton from "./LikeButton";
+import ZoomablePhoto from "./ZoomablePhoto";
 
 type Props = {
   photos: PhotoListItem[];
@@ -270,7 +271,7 @@ export default function FullscreenPhotoViewer({
             Photo Area
         ====================================== */}
 
-        <div
+        {/* <div
           className="
             relative
             flex-1
@@ -280,6 +281,14 @@ export default function FullscreenPhotoViewer({
           "
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
+        > */}
+        <div
+          className="
+            relative
+            flex-1
+            overflow-hidden
+            bg-black
+          "
         >
           {/* Previous */}
 
@@ -369,7 +378,7 @@ export default function FullscreenPhotoViewer({
                   justify-center
                 "
               >
-                <img
+                {/* <img
                   src={photo.image_url}
                   alt={
                     photo.guest_name ??
@@ -382,6 +391,15 @@ export default function FullscreenPhotoViewer({
                     select-none
                     object-contain
                   "
+                /> */}
+                <ZoomablePhoto
+                  src={photo.image_url}
+                  alt={
+                    photo.guest_name ??
+                    "photo"
+                  }
+                  onSwipeLeft={handleNext}
+                  onSwipeRight={handlePrevious}
                 />
               </motion.div>
             </AnimatePresence>

@@ -94,7 +94,8 @@ export default function Header({
           {/* =========================
               Desktop Navigation
           ========================= */}
-          <div className="hidden items-center gap-6 sm:flex">
+          <div className="hidden items-right gap-6 sm:flex">
+          {/* <div className="hidden items-center gap-6 sm:flex"> */}
             {/* Page Navigation */}
             <nav className="flex items-center gap-6">
               <a
