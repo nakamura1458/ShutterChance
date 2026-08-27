@@ -444,8 +444,7 @@ export default function FullscreenPhotoViewer({
                 backdrop-blur
               "
             >
-              {photo.guest_name ||
-                "ゲスト"}
+              {photo.guest_name || "ゲスト"}
             </div>
 
             {/* Like */}
