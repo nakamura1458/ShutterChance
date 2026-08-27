@@ -2,28 +2,38 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
 import { stripe } from "@/lib/stripe";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(req: Request) {
   const body = await req.text();
 
-  const signature =
-    req.headers.get("stripe-signature");
+  const signature = req.headers.get("stripe-signature");
 
   if (!signature) {
-    return new NextResponse(
-      "Missing stripe-signature",
-      { status: 400 },
-    );
+    return new NextResponse("Missing stripe-signature", {
+      status: 400,
+    });
   }
 
   let event: Stripe.Event;
 
+  // Stripe Webhook署名を検証
   try {
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      console.error("STRIPE_WEBHOOK_SECRET is not configured");
+
+      return new NextResponse(
+        "Webhook secret is not configured",
+        { status: 500 },
+      );
+    }
+
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!,
+      webhookSecret,
     );
   } catch (error) {
     console.error(
@@ -43,15 +53,18 @@ export async function POST(req: Request) {
         const session =
           event.data.object as Stripe.Checkout.Session;
 
-        const eventId =
-          session.metadata?.eventId;
-
-        const planId =
-          session.metadata?.planId;
+        // Stripe Checkout Sessionのmetadataから取得
+        const eventId = session.metadata?.eventId;
+        const planId = session.metadata?.planId;
 
         if (!eventId || !planId) {
           console.error(
-            "Missing eventId or planId in Stripe metadata",
+            "Missing eventId or planId in Stripe metadata:",
+            {
+              eventId,
+              planId,
+              sessionId: session.id,
+            },
           );
 
           return new NextResponse(
@@ -60,7 +73,7 @@ export async function POST(req: Request) {
           );
         }
 
-        // Stripe側で決済が完了していることを確認
+        // 決済が完了しているか確認
         if (session.payment_status !== "paid") {
           console.log(
             "Payment is not completed:",
@@ -70,27 +83,31 @@ export async function POST(req: Request) {
           break;
         }
 
-        const supabase = await createClient();
+        // Stripe WebhookではAdmin Clientを使用
+        const supabase = createAdminClient();
 
-        const { error } = await supabase
+        const {
+          error,
+          data,
+        } = await supabase
           .from("events")
           .update({
             payment_status: "paid",
-            stripe_checkout_session_id:
-              session.id,
+            stripe_checkout_session_id: session.id,
             stripe_payment_intent_id:
-              typeof session.payment_intent ===
-              "string"
+              typeof session.payment_intent === "string"
                 ? session.payment_intent
                 : null,
           })
           .eq("id", eventId)
-          .eq("plan", planId);
+          .eq("plan", planId)
+          .select("id, plan, payment_status")
+          .single();
 
         if (error) {
           console.error(
             "Failed to update event payment status:",
-            error,
+            JSON.stringify(error, null, 2),
           );
 
           return new NextResponse(
@@ -100,7 +117,17 @@ export async function POST(req: Request) {
         }
 
         console.log(
-          `Payment completed: event=${eventId}, plan=${planId}`,
+          "Payment completed and database updated:",
+          {
+            eventId,
+            planId,
+            sessionId: session.id,
+            paymentIntentId:
+              typeof session.payment_intent === "string"
+                ? session.payment_intent
+                : null,
+            updatedEvent: data,
+          },
         );
 
         break;
