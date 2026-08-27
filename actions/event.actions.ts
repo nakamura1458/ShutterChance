@@ -212,7 +212,6 @@ export async function createEvent(
       event_token: eventToken,
       user_id: user.id,
 
-      // 情報取得（event_planテーブル）
       plan: plan.id,
 
       max_upload_count: isAdmin
@@ -221,10 +220,17 @@ export async function createEvent(
 
       event_start_at: dateToJSTStartOfDay(input.eventStartAt),
 
-      event_deadline: input.eventDeadline ? dateToJSTEndOfDay(input.eventDeadline) : null,
+      event_deadline: input.eventDeadline
+        ? dateToJSTEndOfDay(input.eventDeadline)
+        : null,
 
       is_public: true,
       allow_guest_download: true,
+
+      payment_status:
+        plan.id === "free"
+          ? "paid"
+          : "pending",
     })
     .select()
     .single();

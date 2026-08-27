@@ -270,18 +270,6 @@ export default function FullscreenPhotoViewer({
         {/* ======================================
             Photo Area
         ====================================== */}
-
-        {/* <div
-          className="
-            relative
-            flex-1
-            overflow-hidden
-            bg-black
-            touch-pan-y
-          "
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        > */}
         <div
           className="
             relative
@@ -378,20 +366,6 @@ export default function FullscreenPhotoViewer({
                   justify-center
                 "
               >
-                {/* <img
-                  src={photo.image_url}
-                  alt={
-                    photo.guest_name ??
-                    "photo"
-                  }
-                  draggable={false}
-                  className="
-                    h-full
-                    w-full
-                    select-none
-                    object-contain
-                  "
-                /> */}
                 <ZoomablePhoto
                   src={photo.image_url}
                   alt={

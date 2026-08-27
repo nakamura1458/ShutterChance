@@ -172,15 +172,45 @@ function NewEventPageContent() {
 
     // イベント作成
     try {
-      await createEvent({
+      const result = await createEvent({
         name: trimmedName,
         plan,
         eventStartAt: eventStartDate,
-        eventDeadline
+        eventDeadline,
       });
 
-      // ダッシュボードへ
-      router.push("/dashboard");
+      console.log("選択プラン:", plan);
+      console.log("作成イベント:", result.event);
+
+      const eventId = result.event.id;
+
+      if (plan === "free") {
+        router.push("/dashboard");
+        return;
+      }
+
+      console.log("Stripe Checkout開始");
+
+      const response = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          eventId,
+          planId: plan,
+        }),
+      });
+
+      const checkout = await response.json();
+
+      if (!response.ok || !checkout.url) {
+        throw new Error(
+          checkout.error ?? "決済画面の作成に失敗しました。",
+        );
+      }
+
+      window.location.href = checkout.url;
     } catch (err) {
       console.error(err);
 

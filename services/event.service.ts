@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import { supabaseAdmin } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+const supabaseAdmin = createAdminClient();
 
 export async function getEventByToken(
   eventToken: string,
