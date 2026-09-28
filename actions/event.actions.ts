@@ -154,6 +154,10 @@ type CreateEventInput = {
   plan: string;
   eventStartAt: string;
   eventDeadline: string | null;
+
+  // 開発者向け
+  skipPayment?: boolean;
+  disableExpiration?: boolean;
 };
 
 export async function createEvent(
@@ -201,6 +205,13 @@ export async function createEvent(
     user.id ===
     process.env.SHUTTERCHANCE_ADMIN_USER_ID;
 
+  // 開発者のみ指定可能
+  const skipPayment =
+    isAdmin && input.skipPayment === true;
+
+  const disableExpiration =
+    isAdmin && input.disableExpiration === true;
+
   // イベントトークン生成
   const eventToken = crypto.randomUUID();
 
@@ -220,15 +231,17 @@ export async function createEvent(
 
       event_start_at: dateToJSTStartOfDay(input.eventStartAt),
 
-      event_deadline: input.eventDeadline
-        ? dateToJSTEndOfDay(input.eventDeadline)
-        : null,
+      event_deadline: disableExpiration
+        ? null
+        : input.eventDeadline
+          ? dateToJSTEndOfDay(input.eventDeadline)
+          : null,
 
       is_public: true,
       allow_guest_download: true,
 
       payment_status:
-        plan.id === "free"
+        plan.id === "free" || skipPayment
           ? "paid"
           : "pending",
     })
@@ -393,6 +406,28 @@ export async function getPhotoUploadLimit(
   };
 }
 
+// ----------------------------------------
+// 現在のユーザー権限取得
+// ----------------------------------------
+export async function getCurrentUserPermissions() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      isDeveloper: false,
+    };
+  }
+
+  return {
+    isDeveloper:
+      user.id ===
+      process.env.SHUTTERCHANCE_ADMIN_USER_ID,
+  };
+}
 
 // ----------------------------------------
 // イベントプラン情報取得

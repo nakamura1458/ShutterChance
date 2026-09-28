@@ -15,6 +15,7 @@ import PlanSelector from "@/components/dashboard/PlanSelector";
 
 import {
   createEvent,
+  getCurrentUserPermissions,
   getEventPlans,
 } from "@/actions/event.actions";
 
@@ -91,6 +92,9 @@ function NewEventPageContent() {
   const [error, setError] = useState("");
 
   const [loading, setLoading] = useState(false);
+
+  // 開発者権限
+  const [isDeveloper, setIsDeveloper] = useState(false);
 
   // 日付
   const maxEventDate = getMaxDate(eventStartDate);
@@ -231,6 +235,31 @@ function NewEventPageContent() {
       setPlan(planFromQuery);
     }
   }, [searchParams]);
+
+  // ----------------------------------------
+  // 開発者権限取得
+  // ----------------------------------------
+  useEffect(() => {
+    async function loadPermissions() {
+      try {
+        const permissions =
+          await getCurrentUserPermissions();
+
+        setIsDeveloper(
+          permissions.isDeveloper,
+        );
+      } catch (error) {
+        console.error(
+          "権限取得エラー:",
+          error,
+        );
+
+        setIsDeveloper(false);
+      }
+    }
+
+    loadPermissions();
+  }, []);
 
   // プラン取得
   useEffect(() => {

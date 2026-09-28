@@ -7,7 +7,7 @@ import {
   UserRound,
   Clock,
   Sparkles,
-  ChevronRight,
+  Check,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -37,182 +37,189 @@ export default async function GuidePage({ params }: Props) {
 
       <div className="mx-auto max-w-2xl px-4 pb-16">
         {/* Hero */}
-        <section className="py-12 text-center">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-900 text-white shadow-sm">
+        <section className="py-10 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center">
             <Image
               src="/icon.png"
               alt="Shutter Chance"
-              width={70}
-              height={70}
-              className="mx-auto mb-5 rounded-2xl"
+              width={64}
+              height={64}
+              className="rounded-2xl"
             />
           </div>
 
-          <h1 className="text-2xl font-semibold uppercase tracking-[0.25em]">
+          <h1 className="mt-5 text-2xl font-semibold uppercase tracking-[0.2em]">
             Shutter Chance
           </h1>
 
-          <p className="mt-3 text-lg font-semibold text-zinc-800">
-            みんなの写真を、
+          <p className="mt-4 text-xl font-bold leading-8 text-zinc-950">
+            写真を、
             <br />
-            ひとつの場所に。
+            みんなで共有しよう。
           </p>
 
           <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-zinc-500">
-            イベントで撮った写真を、参加者みんなでかんたんに共有できます。
+            アプリのインストールや会員登録は不要です。
+            <br />
+            スマートフォンだけで、かんたんに写真を共有できます。
           </p>
         </section>
 
         {/* How to use */}
         <section>
-          <div className="mb-4">
+          <div className="mb-6">
             <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
               How to use
             </p>
 
             <h2 className="mt-1 text-xl font-bold text-zinc-950">
-              SHUTTER CHANCE の使い方
+              写真を送る方法
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-zinc-500">
+              4つのステップでかんたんに写真を共有できます。
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            {/* STEP 1 */}
+            <GuideStep
+              number="01"
+              title="お名前を入力"
+              description={
+                <>
+                  写真を送る前に、
+                  <br />
+                  お名前を入力してください。
+                </>
+              }
+              image="/guide/step-01-name.png"
+              imageAlt="お名前を入力する画面"
+            />
+
+            {/* STEP 2 */}
+            <GuideStep
+              number="02"
+              title="「撮影を始める」をタップ"
+              description={
+                <>
+                  お名前を入力したら、
+                  <br />
+                  「撮影を始める」をタップします。
+                </>
+              }
+              image="/guide/step-02-start.png"
+              imageAlt="撮影を始めるボタンの画面"
+            />
+
+            {/* STEP 3 */}
+            <GuideStep
+              number="03"
+              title="写真を撮影・選択"
+              description={
+                <>
+                  その場で写真を撮影することも、
+                  <br />
+                  スマートフォンにある写真を選ぶこともできます。
+                </>
+              }
+              image="/guide/step-03-photo.png"
+              imageAlt="写真を撮影・選択する画面"
+            />
+
+            {/* STEP 4 */}
+            <GuideStep
+              number="04"
+              title="写真をアップロード"
+              description={
+                <>
+                  写真を確認してアップロードします。
+                  <br />
+                  これで写真の共有は完了です！
+                </>
+              }
+              image="/guide/step-04-upload.png"
+              imageAlt="写真をアップロードする画面"
+              last
+            />
+          </div>
+        </section>
+
+        {/* Camera permission */}
+        <section className="mt-8 rounded-2xl border border-zinc-200 bg-white p-5">
+          <div className="flex gap-3">
+            <Camera className="mt-0.5 h-5 w-5 shrink-0 text-zinc-500" />
+
+            <div>
+              <p className="text-sm font-semibold text-zinc-900">
+                カメラの使用について
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-zinc-500">
+                初めて撮影するときは、カメラへのアクセス許可を求められる場合があります。
+                「許可」を選択してください。
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Gallery */}
+        <section className="mt-12">
+          <div className="mb-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
+              Gallery
+            </p>
+
+            <h2 className="mt-1 text-xl font-bold text-zinc-950">
+              みんなの写真を見る
             </h2>
           </div>
 
-          <div className="space-y-3">
-            {/* Send */}
-            <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-              <div className="flex items-start gap-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-800">
-                  <Camera className="h-5 w-5" />
-                </div>
-
-                <div className="min-w-0">
-                  <h3 className="font-semibold text-zinc-950">
-                    写真を送る
-                  </h3>
-
-                  <p className="mt-1.5 text-sm leading-6 text-zinc-500">
-                    スマートフォンにある写真を選んで、かんたんにアップロードできます。
-                    複数の写真をまとめて送ることもできます。
-                  </p>
-
-                  <Link
-                    href={`/e/${eventToken}`}
-                    className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-zinc-900"
-                  >
-                    写真を送る
-                    <ChevronRight className="h-4 w-4" />
-                  </Link>
-                </div>
+          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-800">
+                <Images className="h-5 w-5" />
               </div>
-            </div>
 
-            {/* Gallery */}
-            <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-              <div className="flex items-start gap-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-800">
-                  <Images className="h-5 w-5" />
-                </div>
+              <div className="min-w-0">
+                <h3 className="font-semibold text-zinc-950">
+                  イベントのみんなの写真
+                </h3>
 
-                <div>
-                  <h3 className="font-semibold text-zinc-950">
-                    みんなの写真を見る
-                  </h3>
+                <p className="mt-1.5 text-sm leading-6 text-zinc-500">
+                  参加者が送った写真を、イベントのギャラリーから見ることができます。
+                </p>
 
-                  <p className="mt-1.5 text-sm leading-6 text-zinc-500">
-                    参加者が送った写真を、イベントのギャラリーで楽しめます。
-                    自分が撮った写真以外もチェックしてみてください。
-                  </p>
-
-                  <Link
-                    href={`/e/${eventToken}`}
-                    className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-zinc-900"
-                  >
-                    写真を見る
-                    <ChevronRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            {/* Download */}
-            <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-              <div className="flex items-start gap-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-800">
-                  <Download className="h-5 w-5" />
-                </div>
-
-                <div>
-                  <h3 className="font-semibold text-zinc-950">
-                    気に入った写真を保存
-                  </h3>
-
-                  <p className="mt-1.5 text-sm leading-6 text-zinc-500">
-                    写真をタップすると大きく表示できます。
-                    気に入った写真はスマートフォンに保存できます。
-                  </p>
-                </div>
+                <Link
+                  href={`/e/${eventToken}/photos`}
+                  className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-zinc-900"
+                >
+                  写真を見る
+                  <span aria-hidden="true">→</span>
+                </Link>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Features */}
-        <section className="mt-12">
-          <div className="mb-4">
-            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
-              Features
-            </p>
+        {/* Download */}
+        <section className="mt-6">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-800">
+                <Download className="h-5 w-5" />
+              </div>
 
-            <h2 className="mt-1 text-xl font-bold text-zinc-950">
-              こんなことができます
-            </h2>
-          </div>
+              <div>
+                <h3 className="font-semibold text-zinc-950">
+                  気に入った写真を保存
+                </h3>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-              <Camera className="h-5 w-5 text-zinc-700" />
-
-              <p className="mt-3 text-sm font-semibold text-zinc-950">
-                かんたんアップロード
-              </p>
-
-              <p className="mt-1 text-xs leading-5 text-zinc-500">
-                スマホから写真を選ぶだけ
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-              <Images className="h-5 w-5 text-zinc-700" />
-
-              <p className="mt-3 text-sm font-semibold text-zinc-950">
-                みんなで共有
-              </p>
-
-              <p className="mt-1 text-xs leading-5 text-zinc-500">
-                イベントの写真をまとめて閲覧
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-              <Download className="h-5 w-5 text-zinc-700" />
-
-              <p className="mt-3 text-sm font-semibold text-zinc-950">
-                写真を保存
-              </p>
-
-              <p className="mt-1 text-xs leading-5 text-zinc-500">
-                気に入った写真を端末へ保存
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-              <Sparkles className="h-5 w-5 text-zinc-700" />
-
-              <p className="mt-3 text-sm font-semibold text-zinc-950">
-                思い出を残す
-              </p>
-
-              <p className="mt-1 text-xs leading-5 text-zinc-500">
-                みんなの視点で楽しめる
-              </p>
+                <p className="mt-1.5 text-sm leading-6 text-zinc-500">
+                  写真をタップすると大きく表示できます。
+                  気に入った写真はスマートフォンに保存できます。
+                </p>
+              </div>
             </div>
           </div>
         </section>
@@ -231,6 +238,23 @@ export default async function GuidePage({ params }: Props) {
 
           <div className="rounded-2xl border border-zinc-200 bg-white p-5">
             <div className="space-y-4">
+              {/* No account */}
+              <div className="flex gap-3">
+                <UserRound className="mt-0.5 h-5 w-5 shrink-0 text-zinc-500" />
+
+                <div>
+                  <p className="text-sm font-semibold text-zinc-900">
+                    会員登録・ログインは不要
+                  </p>
+
+                  <p className="mt-1 text-xs leading-5 text-zinc-500">
+                    ゲストの方は、アプリのインストールや会員登録をせずにご利用いただけます。
+                  </p>
+                </div>
+              </div>
+
+              <div className="h-px bg-zinc-100" />
+
               {/* Name */}
               <div className="flex gap-3">
                 <UserRound className="mt-0.5 h-5 w-5 shrink-0 text-zinc-500" />
@@ -301,5 +325,69 @@ export default async function GuidePage({ params }: Props) {
         </footer>
       </div>
     </main>
+  );
+}
+
+/**
+ * ゲスト向け操作ガイド
+ */
+function GuideStep({
+  number,
+  title,
+  description,
+  image,
+  imageAlt,
+  last = false,
+}: {
+  number: string;
+  title: string;
+  description: React.ReactNode;
+  image: string;
+  imageAlt: string;
+  last?: boolean;
+}) {
+  return (
+    <div className="relative">
+      {/* Step number */}
+      <div className="mb-3 flex items-center gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-xs font-bold text-white">
+          {number}
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
+            STEP {number}
+          </p>
+
+          <h3 className="mt-0.5 text-lg font-bold text-zinc-950">
+            {title}
+          </h3>
+        </div>
+      </div>
+
+      {/* Screenshot */}
+      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+        <div className="relative aspect-[4/3] w-full bg-zinc-100">
+          <Image
+            src={image}
+            alt={imageAlt}
+            fill
+            sizes="(max-width: 672px) 100vw, 672px"
+            className="object-contain"
+          />
+        </div>
+
+        <div className="border-t border-zinc-100 px-5 py-4">
+          <p className="text-sm leading-6 text-zinc-600">
+            {description}
+          </p>
+        </div>
+      </div>
+
+      {/* Connector */}
+      {!last && (
+        <div className="absolute bottom-[-24px] left-[17px] h-6 w-px bg-zinc-200" />
+      )}
+    </div>
   );
 }
