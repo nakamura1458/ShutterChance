@@ -55,38 +55,39 @@ export default function PhotoPageClient({
       {/* ---------------------------------------- */}
       {/* 写真アップロード */}
       {/* ---------------------------------------- */}
+      <div className="mx-auto w-full max-w-xl">
+        {canUpload ? (
+          <PhotoUpload
+            eventId={eventId}
+            eventToken={eventToken}
+            onUploadSuccess={reloadPhotos}
+          />
+        ) : (
+          <div className="rounded-2xl border border-gray-200 bg-white px-6 py-10 text-center">
+            {isBeforeEvent ? (
+              <>
+                <p className="text-base font-semibold text-gray-900">
+                  イベントはまだ開始されていません
+                </p>
 
-      {canUpload ? (
-        <PhotoUpload
-          eventId={eventId}
-          eventToken={eventToken}
-          onUploadSuccess={reloadPhotos}
-        />
-      ) : (
-        <div className="rounded-2xl border border-gray-200 bg-white px-6 py-10 text-center">
-          {isBeforeEvent ? (
-            <>
-              <p className="text-base font-semibold text-gray-900">
-                イベントはまだ開始されていません
-              </p>
+                <p className="mt-2 text-sm text-gray-500">
+                  イベント開始後に写真をアップロードできます。
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-base font-semibold text-gray-900">
+                  イベントは終了しました
+                </p>
 
-              <p className="mt-2 text-sm text-gray-500">
-                イベント開始後に写真をアップロードできます。
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-base font-semibold text-gray-900">
-                イベントは終了しました
-              </p>
-
-              <p className="mt-2 text-sm text-gray-500">
-                写真のアップロード受付は終了しています。
-              </p>
-            </>
-          )}
-        </div>
-      )}
+                <p className="mt-2 text-sm text-gray-500">
+                  写真のアップロード受付は終了しています。
+                </p>
+              </>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* ---------------------------------------- */}
       {/* 写真一覧 */}

@@ -17,7 +17,7 @@ export default function ImagePickerButton({
         onClick={onClick}
     >
     <Image className="mr-2 h-5 w-5" />
-        アルバムから選ぶ
+        写真を選ぶ
     </Button>
   );
 }

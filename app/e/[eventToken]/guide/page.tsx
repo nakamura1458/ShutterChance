@@ -10,6 +10,7 @@ import {
   Check,
 } from "lucide-react";
 import Image from "next/image";
+import GuideSteps from "@/components/guide/GuideSteps";
 
 type Props = {
   params: Promise<{
@@ -79,70 +80,10 @@ export default async function GuidePage({ params }: Props) {
             <p className="mt-2 text-sm leading-6 text-zinc-500">
               4つのステップでかんたんに写真を共有できます。
             </p>
+
           </div>
 
-          <div className="space-y-6">
-            {/* STEP 1 */}
-            <GuideStep
-              number="01"
-              title="お名前を入力"
-              description={
-                <>
-                  写真を送る前に、
-                  <br />
-                  お名前を入力してください。
-                </>
-              }
-              image="/guide/step-01-name.png"
-              imageAlt="お名前を入力する画面"
-            />
-
-            {/* STEP 2 */}
-            <GuideStep
-              number="02"
-              title="「撮影を始める」をタップ"
-              description={
-                <>
-                  お名前を入力したら、
-                  <br />
-                  「撮影を始める」をタップします。
-                </>
-              }
-              image="/guide/step-02-start.png"
-              imageAlt="撮影を始めるボタンの画面"
-            />
-
-            {/* STEP 3 */}
-            <GuideStep
-              number="03"
-              title="写真を撮影・選択"
-              description={
-                <>
-                  その場で写真を撮影することも、
-                  <br />
-                  スマートフォンにある写真を選ぶこともできます。
-                </>
-              }
-              image="/guide/step-03-photo.png"
-              imageAlt="写真を撮影・選択する画面"
-            />
-
-            {/* STEP 4 */}
-            <GuideStep
-              number="04"
-              title="写真をアップロード"
-              description={
-                <>
-                  写真を確認してアップロードします。
-                  <br />
-                  これで写真の共有は完了です！
-                </>
-              }
-              image="/guide/step-04-upload.png"
-              imageAlt="写真をアップロードする画面"
-              last
-            />
-          </div>
+          <GuideSteps />
         </section>
 
         {/* Camera permission */}
@@ -367,12 +308,12 @@ function GuideStep({
 
       {/* Screenshot */}
       <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-        <div className="relative aspect-[4/3] w-full bg-zinc-100">
+        <div className="relative mx-auto aspect-[9/16] w-full max-w-[320px] bg-zinc-100">
           <Image
             src={image}
             alt={imageAlt}
             fill
-            sizes="(max-width: 672px) 100vw, 672px"
+            sizes="320px"
             className="object-contain"
           />
         </div>
@@ -384,10 +325,6 @@ function GuideStep({
         </div>
       </div>
 
-      {/* Connector */}
-      {!last && (
-        <div className="absolute bottom-[-24px] left-[17px] h-6 w-px bg-zinc-200" />
-      )}
     </div>
   );
 }
