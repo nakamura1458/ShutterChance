@@ -16,10 +16,12 @@ export async function POST(req: Request) {
 
     const supabase = createAdminClient();
 
+    // ----------------------------------------
     // プラン情報をDBから取得
+    // ----------------------------------------
     const { data: plan, error: planError } = await supabase
       .from("event_plans")
-      .select("id, name, price, stripe_price_id")
+      .select("id, name, price")
       .eq("id", planId)
       .single();
 
@@ -38,14 +40,37 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!plan.stripe_price_id) {
+    // ----------------------------------------
+    // Stripe環境を決定
+    // ----------------------------------------
+    const stripeMode =
+      process.env.STRIPE_MODE === "live"
+        ? "live"
+        : "test";
+
+    // ----------------------------------------
+    // 環境に対応したStripe Priceを取得
+    // ----------------------------------------
+    const { data: stripePrice, error: stripePriceError } =
+      await supabase
+        .from("stripe_prices")
+        .select("stripe_price_id")
+        .eq("plan_id", plan.id)
+        .eq("environment", stripeMode)
+        .single();
+
+    if (stripePriceError || !stripePrice) {
       return NextResponse.json(
-        { error: "Stripe Price IDが設定されていません" },
+        {
+          error: `Stripe Price IDが設定されていません（${stripeMode}）`,
+        },
         { status: 500 }
       );
     }
 
+    // ----------------------------------------
     // イベントの存在確認
+    // ----------------------------------------
     const { data: event, error: eventError } = await supabase
       .from("events")
       .select("id, name")
@@ -59,13 +84,15 @@ export async function POST(req: Request) {
       );
     }
 
+    // ----------------------------------------
     // Stripe Checkoutを作成
+    // ----------------------------------------
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
 
       line_items: [
         {
-          price: plan.stripe_price_id,
+          price: stripePrice.stripe_price_id,
           quantity: 1,
         },
       ],
