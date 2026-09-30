@@ -60,6 +60,13 @@ export async function POST(req: Request) {
         .single();
 
     if (stripePriceError || !stripePrice) {
+      console.error("Stripe Price lookup failed:", {
+        stripeMode,
+        planId: plan.id,
+        stripePrice,
+        stripePriceError,
+      });
+      
       return NextResponse.json(
         {
           error: `Stripe Price IDが設定されていません（${stripeMode}）`,
