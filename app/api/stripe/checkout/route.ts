@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomBytes } from "crypto";
 
 import { stripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -66,7 +67,7 @@ export async function POST(req: Request) {
         stripePrice,
         stripePriceError,
       });
-      
+
       return NextResponse.json(
         {
           error: `Stripe Price IDが設定されていません（${stripeMode}）`,
@@ -92,6 +93,36 @@ export async function POST(req: Request) {
     }
 
     // ----------------------------------------
+    // 決済リターン用の一時トークンを発行
+    // ----------------------------------------
+    const paymentReturnToken = randomBytes(32).toString("hex");
+
+    const paymentReturnExpiresAt = new Date(
+      Date.now() + 15 * 60 * 1000,
+    ).toISOString();
+
+    const { error: paymentReturnUpdateError } = await supabase
+      .from("events")
+      .update({
+        payment_return_token: paymentReturnToken,
+        payment_return_expires_at: paymentReturnExpiresAt,
+        payment_return_used_at: null,
+      })
+      .eq("id", event.id);
+
+    if (paymentReturnUpdateError) {
+      console.error(
+        "Failed to create payment return token:",
+        paymentReturnUpdateError,
+      );
+
+      return NextResponse.json(
+        { error: "決済フローの準備に失敗しました" },
+        { status: 500 },
+      );
+    }
+
+    // ----------------------------------------
     // Stripe Checkoutを作成
     // ----------------------------------------
     const session = await stripe.checkout.sessions.create({
@@ -110,10 +141,10 @@ export async function POST(req: Request) {
       },
 
       success_url:
-        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/events/${event.id}/payment/success`,
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/events/${event.id}/payment/success?token=${paymentReturnToken}`,
 
       cancel_url:
-        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/events/${event.id}/payment/cancel`,
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/events/${event.id}/payment/cancel?token=${paymentReturnToken}`,
 
       locale: "ja",
     });
