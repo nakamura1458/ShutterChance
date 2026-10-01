@@ -7,7 +7,6 @@ import Hero from "@/components/landing/Hero";
 import Problem from "@/components/landing/Problem";
 import Solution from "@/components/landing/Solution";
 import HowItWorks from "@/components/landing/HowItWorks";
-import Product from "@/components/landing/Product";
 import Pricing from "@/components/landing/Pricing";
 import GuestEntry from "@/components/landing/GuestEntry";
 import FinalCta from "@/components/landing/FinalCta";
@@ -25,10 +24,6 @@ export default function Home() {
     router.push("/dashboard/events/new");
   };
 
-  const handleViewPlans = () => {
-    router.push("/plan");
-  };
-
   return (
     <main className="min-h-screen bg-white text-gray-900">
       <Header onCreateEvent={handleCreateEvent} />
@@ -41,9 +36,7 @@ export default function Home() {
 
       <HowItWorks />
 
-      <Product />
-
-      <Pricing onViewPlans={handleViewPlans} />
+      <Pricing />
 
       <FAQ />
 

@@ -176,12 +176,6 @@ function NewEventPageContent() {
 
     // イベント作成
     try {
-      // const result = await createEvent({
-      //   name: trimmedName,
-      //   plan,
-      //   eventStartAt: eventStartDate,
-      //   eventDeadline,
-      // });
       const result = await createEvent({
         name: trimmedName,
         plan,
