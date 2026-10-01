@@ -176,11 +176,18 @@ function NewEventPageContent() {
 
     // イベント作成
     try {
+      // const result = await createEvent({
+      //   name: trimmedName,
+      //   plan,
+      //   eventStartAt: eventStartDate,
+      //   eventDeadline,
+      // });
       const result = await createEvent({
         name: trimmedName,
         plan,
         eventStartAt: eventStartDate,
         eventDeadline,
+        skipPayment: isDeveloper,
       });
 
       console.log("選択プラン:", plan);
@@ -188,7 +195,7 @@ function NewEventPageContent() {
 
       const eventId = result.event.id;
 
-      if (plan === "free") {
+      if (plan === "free" || isDeveloper) {
         router.push("/dashboard");
         return;
       }
