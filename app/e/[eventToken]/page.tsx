@@ -1,6 +1,7 @@
 import { getEventByToken } from "@/services/event.service";
 import { getPhotos } from "@/services/photo.service";
 import PhotoPageClient from "@/components/photo/PhotoPageClient";
+import AddToHomeScreenPrompt from "@/components/event/AddToHomeScreenPrompt";
 import Link from "next/link";
 import {
   Link as LinkIcon,
@@ -125,6 +126,8 @@ export default async function EventPage({
           eventStartAt={event.event_start_at}
           eventDeadline={event.event_deadline}
         />
+
+        <AddToHomeScreenPrompt />
       </div>
     </main>
   );
