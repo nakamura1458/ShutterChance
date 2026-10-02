@@ -176,47 +176,60 @@ function NewEventPageContent() {
 
     // イベント作成
     try {
-      const result = await createEvent({
-        name: trimmedName,
-        plan,
-        eventStartAt: eventStartDate,
-        eventDeadline,
-        skipPayment: isDeveloper,
-      });
-
-      console.log("選択プラン:", plan);
-      console.log("作成イベント:", result.event);
-
-      const eventId = result.event.id;
-
+      // ----------------------------------------
+      // 無料プラン or 開発者
+      // → そのままイベント作成
+      // ----------------------------------------
       if (plan === "free" || isDeveloper) {
+        const result = await createEvent({
+          name: trimmedName,
+          plan,
+          eventStartAt: eventStartDate,
+          eventDeadline,
+          skipPayment: isDeveloper,
+        });
+
+        console.log("選択プラン:", plan);
+        console.log("作成イベント:", result.event);
+
         router.push("/dashboard");
         return;
       }
 
+      // ----------------------------------------
+      // 有料プラン
+      // → Stripe Checkoutへ
+      // → 決済成功後にWebhookでイベント作成
+      // ----------------------------------------
       console.log("Stripe Checkout開始");
 
-      const response = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        "/api/stripe/checkout",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: trimmedName,
+            planId: plan,
+            eventStartAt: eventStartDate,
+            eventDeadline,
+          }),
         },
-        body: JSON.stringify({
-          eventId,
-          planId: plan,
-        }),
-      });
+      );
 
       const checkout = await response.json();
 
       if (!response.ok || !checkout.url) {
         throw new Error(
-          checkout.error ?? "決済画面の作成に失敗しました。",
+          checkout.error ??
+            "決済画面の作成に失敗しました。",
         );
       }
 
       window.location.href = checkout.url;
-    } catch (err) {
+        } catch (err) {
       console.error(err);
 
       setError(
