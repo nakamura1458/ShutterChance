@@ -36,6 +36,13 @@ export default function LikeButton({
         const data = await response.json();
 
         if (!response.ok || !data.success) {
+          // 写真が削除済みの場合は、
+          // 再描画直後などに一時的に発生する可能性があるため
+          // エラーとして扱わない
+          if (response.status === 404) {
+            return;
+          }
+
           console.error(
             "Like info error:",
             data.error

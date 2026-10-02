@@ -1,14 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Suspense,
+  useEffect,
+  useState,
+} from "react";
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import { CheckCircle } from "lucide-react";
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const sessionId = searchParams.get("session_id");
+  const sessionId =
+    searchParams.get("session_id");
 
   const [error, setError] = useState("");
 
@@ -38,7 +46,8 @@ export default function PaymentSuccessPage() {
           );
         }
 
-        const result = await response.json();
+        const result =
+          await response.json();
 
         if (cancelled) {
           return;
@@ -47,6 +56,7 @@ export default function PaymentSuccessPage() {
         // ----------------------------------------
         // Webhookによるイベント作成完了
         // ----------------------------------------
+
         if (
           result.status === "completed" &&
           result.event?.eventToken
@@ -60,6 +70,7 @@ export default function PaymentSuccessPage() {
         // ----------------------------------------
         // 一定回数確認してもイベントが作成されない
         // ----------------------------------------
+
         attempts += 1;
 
         if (attempts >= 20) {
@@ -70,7 +81,10 @@ export default function PaymentSuccessPage() {
         }
 
         // 1秒後に再確認
-        setTimeout(checkPaymentStatus, 1000);
+        setTimeout(
+          checkPaymentStatus,
+          1000,
+        );
       } catch (err) {
         console.error(err);
 
@@ -87,7 +101,10 @@ export default function PaymentSuccessPage() {
           return;
         }
 
-        setTimeout(checkPaymentStatus, 1000);
+        setTimeout(
+          checkPaymentStatus,
+          1000,
+        );
       }
     };
 
@@ -116,7 +133,9 @@ export default function PaymentSuccessPage() {
             <button
               type="button"
               onClick={() =>
-                router.replace("/dashboard")
+                router.replace(
+                  "/dashboard",
+                )
               }
               className="mt-8 inline-flex h-11 items-center justify-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground"
             >
@@ -132,5 +151,33 @@ export default function PaymentSuccessPage() {
         )}
       </div>
     </main>
+  );
+}
+
+function PaymentSuccessFallback() {
+  return (
+    <main className="min-h-screen bg-background px-4 py-12">
+      <div className="mx-auto flex max-w-md flex-col items-center text-center">
+        <CheckCircle className="mb-6 h-16 w-16 text-green-500" />
+
+        <h1 className="text-2xl font-bold">
+          決済が完了しました
+        </h1>
+
+        <p className="mt-4 text-muted-foreground">
+          イベントを作成しています。
+          <br />
+          そのまま少々お待ちください。
+        </p>
+      </div>
+    </main>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={<PaymentSuccessFallback />}>
+      <PaymentSuccessContent />
+    </Suspense>
   );
 }

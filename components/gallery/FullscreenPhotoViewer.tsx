@@ -1,23 +1,31 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useRef } from "react";
+import {
+  AnimatePresence,
+  motion,
+} from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
   Share,
+  Trash2,
   X,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import type { PhotoListItem } from "@/types/photo";
 import { savePhotos } from "@/lib/utils/savePhotos";
 import LikeButton from "./LikeButton";
 import ZoomablePhoto from "./ZoomablePhoto";
 
+import { deletePhoto } from "@/app/dashboard/events/[eventToken]/photos/actions";
+
 type Props = {
   photos: PhotoListItem[];
   currentIndex: number;
   eventToken: string;
+  organizerMode?: boolean;
   onPrevious: () => void;
   onNext: () => void;
   onClose: () => void;
@@ -27,10 +35,13 @@ export default function FullscreenPhotoViewer({
   photos,
   currentIndex,
   eventToken,
+  organizerMode = false,
   onPrevious,
   onNext,
   onClose,
 }: Props) {
+  const router = useRouter();
+
   const photo = photos[currentIndex];
 
   const touchStartX = useRef<number | null>(null);
@@ -41,11 +52,36 @@ export default function FullscreenPhotoViewer({
   const direction = useRef<1 | -1>(1);
 
   // ========================================
+  // Delete
+  // ========================================
+
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] =
+    useState(false);
+
+  const [isDeleting, setIsDeleting] =
+    useState(false);
+
+  const [deleteError, setDeleteError] =
+    useState<string | null>(null);
+
+  // ========================================
   // Keyboard
   // ========================================
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = (
+      e: KeyboardEvent
+    ) => {
+      // 削除確認中はキーボード操作を無効化
+      if (isDeleteConfirmOpen) {
+        if (e.key === "Escape" && !isDeleting) {
+          setIsDeleteConfirmOpen(false);
+          setDeleteError(null);
+        }
+
+        return;
+      }
+
       switch (e.key) {
         case "ArrowLeft":
           direction.current = -1;
@@ -74,7 +110,13 @@ export default function FullscreenPhotoViewer({
         handleKeyDown
       );
     };
-  }, [onPrevious, onNext, onClose]);
+  }, [
+    onPrevious,
+    onNext,
+    onClose,
+    isDeleteConfirmOpen,
+    isDeleting,
+  ]);
 
   // ========================================
   // Navigation
@@ -130,7 +172,10 @@ export default function FullscreenPhotoViewer({
     touchStartY.current = null;
 
     // 縦方向の移動が大きければ無視
-    if (Math.abs(diffY) > Math.abs(diffX)) {
+    if (
+      Math.abs(diffY) >
+      Math.abs(diffX)
+    ) {
       return;
     }
 
@@ -152,6 +197,65 @@ export default function FullscreenPhotoViewer({
 
   const handleSavePhoto = async () => {
     await savePhotos([photo]);
+  };
+
+  // ========================================
+  // Delete
+  // ========================================
+
+  const handleOpenDeleteConfirm = () => {
+    setDeleteError(null);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleCloseDeleteConfirm = () => {
+    if (isDeleting) {
+      return;
+    }
+
+    setIsDeleteConfirmOpen(false);
+    setDeleteError(null);
+  };
+
+  const handleDeletePhoto = async () => {
+    if (!organizerMode || isDeleting) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const result = await deletePhoto(
+        eventToken,
+        photo.id
+      );
+
+      if (!result.success) {
+        setDeleteError(
+          result.error ??
+            "写真の削除に失敗しました。"
+        );
+        return;
+      }
+
+      // Viewerを閉じる
+      onClose();
+
+      // サーバー側の写真一覧・枚数を再取得
+      router.refresh();
+    } catch (error) {
+      console.error(
+        "delete photo error",
+        error
+      );
+
+      setDeleteError(
+        "写真の削除に失敗しました。"
+      );
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -239,37 +343,73 @@ export default function FullscreenPhotoViewer({
             {photos.length}
           </div>
 
-          {/* Save */}
+          {/* Actions */}
 
-          <button
-            type="button"
-            onClick={handleSavePhoto}
-            className="
-              flex
-              items-center
-              gap-1.5
-              rounded-full
-              bg-white/10
-              px-3
-              py-2
-              text-white
-              transition
-              hover:bg-white/20
-              active:scale-95
-            "
-            aria-label="写真を保存"
-          >
-            <Share size={18} />
+          <div className="flex items-center gap-2">
+            {/* Delete */}
 
-            <span className="text-sm">
-              保存
-            </span>
-          </button>
+            {organizerMode && (
+              <button
+                type="button"
+                onClick={
+                  handleOpenDeleteConfirm
+                }
+                className="
+                  flex
+                  items-center
+                  gap-1.5
+                  rounded-full
+                  bg-red-500/90
+                  px-3
+                  py-2
+                  text-white
+                  transition
+                  hover:bg-red-500
+                  active:scale-95
+                "
+                aria-label="写真を削除"
+              >
+                <Trash2 size={17} />
+
+                <span className="text-sm">
+                  削除
+                </span>
+              </button>
+            )}
+
+            {/* Save */}
+
+            <button
+              type="button"
+              onClick={handleSavePhoto}
+              className="
+                flex
+                items-center
+                gap-1.5
+                rounded-full
+                bg-white/10
+                px-3
+                py-2
+                text-white
+                transition
+                hover:bg-white/20
+                active:scale-95
+              "
+              aria-label="写真を保存"
+            >
+              <Share size={18} />
+
+              <span className="text-sm">
+                保存
+              </span>
+            </button>
+          </div>
         </header>
 
         {/* ======================================
             Photo Area
         ====================================== */}
+
         <div
           className="
             relative
@@ -277,6 +417,8 @@ export default function FullscreenPhotoViewer({
             overflow-hidden
             bg-black
           "
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
           {/* Previous */}
 
@@ -373,7 +515,9 @@ export default function FullscreenPhotoViewer({
                     "photo"
                   }
                   onSwipeLeft={handleNext}
-                  onSwipeRight={handlePrevious}
+                  onSwipeRight={
+                    handlePrevious
+                  }
                 />
               </motion.div>
             </AnimatePresence>
@@ -444,7 +588,8 @@ export default function FullscreenPhotoViewer({
                 backdrop-blur
               "
             >
-              {photo.guest_name || "ゲスト"}
+              {photo.guest_name ||
+                "ゲスト"}
             </div>
 
             {/* Like */}
@@ -476,8 +621,12 @@ export default function FullscreenPhotoViewer({
             <>
               <button
                 type="button"
-                onClick={handlePrevious}
-                disabled={currentIndex === 0}
+                onClick={
+                  handlePrevious
+                }
+                disabled={
+                  currentIndex === 0
+                }
                 className="
                   flex
                   h-11
@@ -536,6 +685,226 @@ export default function FullscreenPhotoViewer({
             <div />
           )}
         </div>
+
+        {/* ======================================
+            Delete Confirmation
+        ====================================== */}
+
+        <AnimatePresence>
+          {isDeleteConfirmOpen && (
+            <motion.div
+              initial={{
+                opacity: 0,
+              }}
+              animate={{
+                opacity: 1,
+              }}
+              exit={{
+                opacity: 0,
+              }}
+              className="
+                absolute
+                inset-0
+                z-50
+                flex
+                items-center
+                justify-center
+                bg-black/70
+                px-5
+                backdrop-blur-sm
+              "
+              onClick={
+                handleCloseDeleteConfirm
+              }
+            >
+              <motion.div
+                initial={{
+                  scale: 0.96,
+                  opacity: 0,
+                }}
+                animate={{
+                  scale: 1,
+                  opacity: 1,
+                }}
+                exit={{
+                  scale: 0.96,
+                  opacity: 0,
+                }}
+                transition={{
+                  duration: 0.15,
+                }}
+                className="
+                  w-full
+                  max-w-sm
+                  rounded-2xl
+                  bg-white
+                  p-6
+                  shadow-2xl
+                "
+                onClick={(e) =>
+                  e.stopPropagation()
+                }
+              >
+                {/* Icon */}
+
+                <div
+                  className="
+                    mx-auto
+                    flex
+                    h-12
+                    w-12
+                    items-center
+                    justify-center
+                    rounded-full
+                    bg-red-50
+                  "
+                >
+                  <Trash2
+                    className="
+                      h-5
+                      w-5
+                      text-red-500
+                    "
+                  />
+                </div>
+
+                {/* Title */}
+
+                <h2
+                  className="
+                    mt-4
+                    text-center
+                    text-lg
+                    font-semibold
+                    text-gray-900
+                  "
+                >
+                  この写真を削除しますか？
+                </h2>
+
+                {/* Description */}
+
+                <p
+                  className="
+                    mt-2
+                    text-center
+                    text-sm
+                    leading-6
+                    text-gray-500
+                  "
+                >
+                  削除した写真は
+                  <br />
+                  復元できません。
+                </p>
+
+                {/* Error */}
+
+                {deleteError && (
+                  <p
+                    className="
+                      mt-4
+                      rounded-xl
+                      bg-red-50
+                      px-4
+                      py-3
+                      text-center
+                      text-sm
+                      text-red-600
+                    "
+                  >
+                    {deleteError}
+                  </p>
+                )}
+
+                {/* Buttons */}
+
+                <div
+                  className="
+                    mt-6
+                    grid
+                    grid-cols-2
+                    gap-3
+                  "
+                >
+                  <button
+                    type="button"
+                    onClick={
+                      handleCloseDeleteConfirm
+                    }
+                    disabled={isDeleting}
+                    className="
+                      rounded-xl
+                      border
+                      border-gray-200
+                      bg-white
+                      px-4
+                      py-3
+                      text-sm
+                      font-medium
+                      text-gray-700
+                      transition
+                      hover:bg-gray-50
+                      active:scale-[0.98]
+                      disabled:cursor-not-allowed
+                      disabled:opacity-50
+                    "
+                  >
+                    キャンセル
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={
+                      handleDeletePhoto
+                    }
+                    disabled={isDeleting}
+                    className="
+                      inline-flex
+                      items-center
+                      justify-center
+                      gap-2
+                      rounded-xl
+                      bg-red-500
+                      px-4
+                      py-3
+                      text-sm
+                      font-medium
+                      text-white
+                      transition
+                      hover:bg-red-600
+                      active:scale-[0.98]
+                      disabled:cursor-not-allowed
+                      disabled:opacity-60
+                    "
+                  >
+                    {isDeleting ? (
+                      <>
+                        <span
+                          className="
+                            h-4
+                            w-4
+                            animate-spin
+                            rounded-full
+                            border-2
+                            border-white/40
+                            border-t-white
+                          "
+                        />
+                        削除中...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 size={16} />
+                        削除する
+                      </>
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

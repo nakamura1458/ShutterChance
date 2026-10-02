@@ -157,3 +157,41 @@ export async function getGuestPhotoCounts(
 
   return counts;
 }
+
+
+// ========================================
+// 一括保存用 写真一覧取得
+// フィルター条件に一致する写真を全件取得
+// ========================================
+
+export async function getPhotosForBulkDownload(
+  eventId: string,
+  guestNames: string[] = []
+) {
+  const supabase = await createClient();
+
+  let query = supabase
+    .from("photos")
+    .select(`
+      id,
+      guest_name,
+      storage_path,
+      created_at
+    `)
+    .eq("event_id", eventId)
+    .order("created_at", {
+      ascending: false,
+    });
+
+  if (guestNames.length > 0) {
+    query = query.in("guest_name", guestNames);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw error;
+  }
+
+  return data ?? [];
+}

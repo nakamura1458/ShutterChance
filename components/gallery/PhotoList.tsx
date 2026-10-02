@@ -21,8 +21,10 @@ import { usePhotoFilter } from "@/hooks/usePhotoFilter";
 import { usePhotoSelection } from "@/hooks/usePhotoSelection";
 import type { PhotoSortOrder } from "@/hooks/usePhotoSort";
 import type { PhotoListItem } from "@/types/photo";
+import { deletePhotos } from "@/app/dashboard/events/[eventToken]/photos/actions";
 import PhotoSortButton from "./sort/PhotoSortButton";
 import PhotoSortSheet from "./sort/PhotoSortSheet";
+import PhotoBulkDownloadButton from "./PhotoBulkDownloadButton";
 
 type Props = {
   photos: PhotoListItem[];
@@ -30,6 +32,7 @@ type Props = {
   eventToken: string;
   guestPhotoCounts?: Record<string, number>;
   totalPhotoCount: number;
+  organizerMode?: boolean;
 };
 
 export default function PhotoList({
@@ -38,11 +41,27 @@ export default function PhotoList({
   eventToken,
   guestPhotoCounts,
   totalPhotoCount,
+  organizerMode = false,
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const selectedGuestsFromUrl = searchParams.getAll("guest");
+  
+  const bulkDownloadGuestNames =
+    Array.from(
+      new Set(selectedGuestsFromUrl)
+    );
+
+  const bulkDownloadPhotoCount =
+    bulkDownloadGuestNames.length === 0
+      ? totalPhotoCount
+      : bulkDownloadGuestNames.reduce(
+          (total, guestName) =>
+            total +
+            (guestPhotoCounts?.[guestName] ?? 0),
+          0
+        );
 
   const urlFilterLabel =
     selectedGuestsFromUrl.length === 0
@@ -50,11 +69,18 @@ export default function PhotoList({
       : selectedGuestsFromUrl.length === 1
         ? selectedGuestsFromUrl[0]
         : `${selectedGuestsFromUrl.length}人選択中`;
-  
-  // Viewer
-  const [currentIndex, setCurrentIndex] = useState<number | null>(null);
 
+  // ========================================
+  // Viewer
+  // ========================================
+
+  const [currentIndex, setCurrentIndex] =
+    useState<number | null>(null);
+
+  // ========================================
   // Filter
+  // ========================================
+
   const {
     selectedGuestNames,
     pendingGuestNames,
@@ -80,12 +106,17 @@ export default function PhotoList({
     a.localeCompare(b, "ja")
   );
 
+  // ========================================
   // Sort
-  const [isSortOpen, setIsSortOpen] = useState(false);
+  // ========================================
+
+  const [isSortOpen, setIsSortOpen] =
+    useState(false);
 
   const sortFromUrl =
-    (searchParams.get("sort") as PhotoSortOrder) ??
-    "newest";
+    (searchParams.get(
+      "sort"
+    ) as PhotoSortOrder) ?? "newest";
 
   const sortedPhotos = photos;
 
@@ -97,7 +128,10 @@ export default function PhotoList({
     likes: "いいね数順",
   }[sortOrder];
 
-  // ソート（ページング反映用）
+  // ========================================
+  // Sort change
+  // ========================================
+
   const handleChangeSort = (
     newSort: PhotoSortOrder
   ) => {
@@ -112,9 +146,14 @@ export default function PhotoList({
     }
 
     // 現在のフィルターを維持
-    selectedGuestNames.forEach((guestName) => {
-      params.append("guest", guestName);
-    });
+    selectedGuestNames.forEach(
+      (guestName) => {
+        params.append(
+          "guest",
+          guestName
+        );
+      }
+    );
 
     // Sheetを閉じる
     setIsSortOpen(false);
@@ -126,7 +165,10 @@ export default function PhotoList({
     );
   };
 
-  // フィルター（＠エージング反映用）
+  // ========================================
+  // Filter change
+  // ========================================
+
   const handleApplyFilter = () => {
     const params = new URLSearchParams();
 
@@ -139,9 +181,14 @@ export default function PhotoList({
     }
 
     // 選択したゲストをURLに追加
-    pendingGuestNames.forEach((guestName) => {
-      params.append("guest", guestName);
-    });
+    pendingGuestNames.forEach(
+      (guestName) => {
+        params.append(
+          "guest",
+          guestName
+        );
+      }
+    );
 
     // フィルター画面を閉じる
     closeFilter();
@@ -155,7 +202,6 @@ export default function PhotoList({
   // ========================================
   // Selection
   // ========================================
-
   const {
     selectionMode,
     selectedIds,
@@ -166,6 +212,36 @@ export default function PhotoList({
     toggleSelectAll,
     saveSelectedPhotos,
   } = usePhotoSelection(photos);
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `${selectedIds.length}枚の写真を削除しますか？\n\n削除した写真は復元できません。`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const result = await deletePhotos(
+      eventToken,
+      selectedIds
+    );
+
+    if (!result.success) {
+      window.alert(
+        result.error ??
+          "写真の削除に失敗しました。"
+      );
+      return;
+    }
+
+    cancelSelection();
+    router.refresh();
+  };
 
   // ========================================
   // Render
@@ -194,21 +270,36 @@ export default function PhotoList({
           />
         ) : (
           <NormalHeader
-            photoCount={totalPhotoCount}
+            photoCount={bulkDownloadPhotoCount}
             showFilter={showFilter}
             filterLabel={urlFilterLabel}
             hasFilter={
               selectedGuestsFromUrl.length > 0
             }
             onOpenFilter={() =>
-              openFilter(selectedGuestsFromUrl)
+              openFilter(
+                selectedGuestsFromUrl
+              )
             }
             onEnterSelection={
               enterSelectionMode
             }
             sortOrder={sortOrder}
             sortLabel={sortLabel}
-            onOpenSort={() => setIsSortOpen(true)}
+            onOpenSort={() =>
+              setIsSortOpen(true)
+            }
+            bulkDownload={
+              <PhotoBulkDownloadButton
+                eventToken={eventToken}
+                guestNames={
+                  bulkDownloadGuestNames
+                }
+                photoCount={
+                  bulkDownloadPhotoCount
+                }
+              />
+            }
           />
         )}
       </div>
@@ -216,6 +307,7 @@ export default function PhotoList({
       {/* ======================================
           Photo Grid
       ====================================== */}
+
       {sortedPhotos.length === 0 ? (
         <EmptyState />
       ) : (
@@ -239,7 +331,9 @@ export default function PhotoList({
                 )}
                 onClick={() => {
                   if (selectionMode) {
-                    toggleSelection(photo.id);
+                    toggleSelection(
+                      photo.id
+                    );
                     return;
                   }
 
@@ -260,6 +354,7 @@ export default function PhotoList({
           photos={sortedPhotos}
           currentIndex={currentIndex}
           eventToken={eventToken}
+          organizerMode={organizerMode}
           onPrevious={() =>
             setCurrentIndex((prev) =>
               prev !== null && prev > 0
@@ -299,7 +394,9 @@ export default function PhotoList({
           pendingPhotoCount={
             pendingFilteredPhotoCount
           }
-          totalPhotoCount={totalPhotoCount}
+          totalPhotoCount={
+            totalPhotoCount
+          }
           onClose={closeFilter}
           onToggleGuest={toggleGuest}
           onSelectAll={selectAllGuests}
@@ -307,24 +404,33 @@ export default function PhotoList({
         />
       )}
 
+      {/* ======================================
+          Sort Sheet
+      ====================================== */}
+
       <PhotoSortSheet
         open={isSortOpen}
         currentSort={sortOrder}
-        onClose={() => setIsSortOpen(false)}
+        onClose={() =>
+          setIsSortOpen(false)
+        }
         onChange={handleChangeSort}
       />
 
       {/* ======================================
           Selection Bar
       ====================================== */}
-
       {selectionMode && (
         <PhotoSelectionBar
-          selectedCount={
-            selectedIds.length
-          }
+          selectedCount={selectedIds.length}
           isSaving={isSaving}
+          organizerMode={organizerMode}
           onSave={saveSelectedPhotos}
+          onDelete={
+            organizerMode
+              ? handleBulkDelete
+              : undefined
+          }
         />
       )}
     </section>
@@ -345,6 +451,7 @@ type NormalHeaderProps = {
   sortOrder: PhotoSortOrder;
   sortLabel: string;
   onOpenSort: () => void;
+  bulkDownload: React.ReactNode;
 };
 
 function NormalHeader({
@@ -357,6 +464,7 @@ function NormalHeader({
   sortOrder,
   sortLabel,
   onOpenSort,
+  bulkDownload,
 }: NormalHeaderProps) {
   return (
     <>
@@ -388,7 +496,9 @@ function NormalHeader({
         {showFilter && (
           <PhotoSortButton
             label={sortLabel}
-            active={sortOrder !== "newest"}
+            active={
+              sortOrder !== "newest"
+            }
             onClick={onOpenSort}
           />
         )}
@@ -404,6 +514,8 @@ function NormalHeader({
             {photoCount} 枚
           </p>
         )}
+
+        {bulkDownload}
 
         <button
           type="button"
