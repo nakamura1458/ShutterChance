@@ -25,20 +25,11 @@ const plans = [
     id: "standard",
     name: "STANDARD",
     price: " ¥ 3,980",
-    description: "結婚式など一般的なイベントに",
+    description: "さまざまなイベントにおすすめ",
     maxUpload: "最大 1,000 枚",
     retention: "60 日間保存",
     recommended: true,
   },
-  // {
-  //   id: "plus",
-  //   name: "PLUS",
-  //   price: " ¥4,980",
-  //   description: "長めに写真を残したい方に",
-  //   maxUpload: "最大1,000枚",
-  //   retention: "90日間保存",
-  //   recommended: false,
-  // },
   {
     id: "premium",
     name: "PREMIUM",
@@ -88,10 +79,15 @@ export default function Pricing() {
           </h2>
 
           <p className="mt-5 text-sm leading-7 text-gray-500">
-            ゲストは無料。
+            結婚式、パーティー、同窓会、社内イベントなど、
             <br />
-            アプリのインストールも必要ありません。
+            さまざまなイベントの写真共有に。
+            <br />
+            主催者だけのお支払いで、ゲストは無料で参加できます。
+            <br />
+            アプリのインストールも不要です。
           </p>
+
         </div>
 
         {/* Plans */}

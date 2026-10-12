@@ -66,22 +66,26 @@ export default function HowItWorks() {
       className="border-t border-gray-100 bg-gray-50 px-5 py-20 sm:px-6 sm:py-28"
     >
       <div className="mx-auto max-w-5xl">
-        {/* Header */}
-        <div className="text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-400">
-            How it works
-          </p>
+        
+      {/* Header */}
+      <div className="text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-400">
+          How it works
+        </p>
 
-          <h2 className="mt-4 text-2xl font-bold sm:text-3xl">
-            使い方はかんたん
-          </h2>
+        <h2 className="mt-4 text-2xl font-bold sm:text-3xl">
+          イベントの写真共有はかんたん4ステップ
+        </h2>
 
-          <p className="mt-4 text-sm leading-6 text-gray-500">
-            QRコードから参加して、
-            <br />
-            写真をアップロードするだけ。
-          </p>
-        </div>
+        <p className="mt-4 text-sm leading-7 text-gray-500">
+          QRコードからイベントに参加して、
+          <br />
+          スマホから写真をアップロードするだけ。
+          <br />
+          アプリのインストールは不要です。
+        </p>
+      </div>
+
 
         {/* Steps */}
         <div className="mt-10">

@@ -26,64 +26,12 @@ export default function Hero({
   const pcHeroPhoto = "/hero/pc/hero-pc-top.jpg"
   const mobileHeroPhoto = "/hero/pc/hero-pc-top.jpg"
 
-  // const [heroPhotoIndex, setHeroPhotoIndex] = useState(0);
-
-  // useEffect(() => {
-  //   const timer = setInterval(() => {
-  //     setHeroPhotoIndex((current) =>
-  //       (current + 1) % pcHeroPhotos.length
-  //     );
-  //   }, 5000);
-
-  //   return () => clearInterval(timer);
-  // }, []);
-
   return (
     <section className="relative flex min-h-[calc(100svh-4rem)] items-center overflow-hidden px-5 py-8 sm:min-h-[calc(100svh-4rem)] sm:px-6 sm:py-5">
 
       {/* =========================
           Background Image
       ========================= */}
-
-      {/* PC */}
-      {/* <div className="absolute inset-0 hidden lg:block">
-        {pcHeroPhotos.map((photo, index) => (
-          <div
-            key={photo}
-            className={`absolute inset-0 transition-all duration-700 ${
-              index === heroPhotoIndex
-                ? "scale-100 opacity-100"
-                : "scale-105 opacity-0"
-            }`}
-          >
-            <img
-              src={photo}
-              alt=""
-              className="h-full w-full object-cover"
-            />
-          </div>
-        ))}
-      </div> */}
-
-      {/* Mobile */}
-      {/* <div className="absolute inset-0 block lg:hidden">
-        {mobileHeroPhotos.map((photo, index) => (
-          <div
-            key={photo}
-            className={`absolute inset-0 transition-all duration-700 ${
-              index === heroPhotoIndex
-                ? "scale-100 opacity-100"
-                : "scale-105 opacity-0"
-            }`}
-          >
-            <img
-              src={photo}
-              alt=""
-              className="h-full w-full object-cover"
-            />
-          </div>
-        ))}
-      </div> */}
       {/* PC */}
       <div className="absolute inset-0 hidden lg:block">
         <div className="absolute inset-0">
@@ -134,9 +82,11 @@ export default function Hero({
 
             {/* <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-gray-500 sm:text-base lg:mx-0"> */}
             <p className="mx-auto mt-4 max-w-md text-sm font-bold leading-7 sm:text-base lg:mx-0">
-              ゲストが撮った写真を、
+              イベントで撮影した写真を、
               <br />
               QRコードひとつでかんたん共有。
+              <br />
+              ゲストはアプリのインストール不要。
             </p>
 
             <button
@@ -148,10 +98,10 @@ export default function Hero({
               <ArrowRight className="h-4 w-4" />
             </button>
 
-            <div className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1 text-m text-blue-800 lg:justify-start">
-              ✓ ゲストは無料
-              <br/>
-              ✓ アプリ不要
+            <div className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-blue-800 lg:justify-start">
+              <span>✓ ゲストは無料</span>
+              <span>✓ アプリ不要</span>
+              <span>✓ 会員登録不要</span>
             </div>
           </div>
 

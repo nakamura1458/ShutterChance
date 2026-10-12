@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Camera,
@@ -40,8 +41,8 @@ export default function Solution() {
             Shutter Chance
           </p>
 
-          <h2 className="mt-4 text-2xl font-bold uppercase sm:text-3xl">
-            Shutter Chance なら
+          <h2 className="mt-4 text-2xl font-bold sm:text-3xl">
+            イベントの写真共有を、もっとかんたんに
           </h2>
 
           <p className="mt-5 text-xl font-medium sm:text-2xl">
@@ -51,25 +52,31 @@ export default function Solution() {
               ひとつの場所に。
             </span>
           </p>
+
+          <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-gray-600 sm:text-base">
+            結婚式やパーティー、同窓会、社内イベントなどで撮影した写真を、
+            QRコードひとつでかんたんに共有。
+            参加者が撮った写真を、イベントごとにまとめて楽しめます。
+          </p>
         </div>
 
         <div className="mt-14 grid gap-4 sm:grid-cols-3">
           <FeatureCard
             icon={<QrCode className="h-6 w-6" />}
-            title="QRコードで参加"
-            description="ゲストはQRコードを読み込むだけ。"
+            title="QRコードでかんたん参加"
+            description="QRコードを読み込むだけで、イベントの写真共有ページにアクセスできます。"
           />
 
           <FeatureCard
             icon={<Camera className="h-6 w-6" />}
-            title="写真を撮る"
-            description="スマホからそのまま写真を共有。"
+            title="スマホから写真を共有"
+            description="参加者が撮影した写真を、それぞれのスマートフォンからアップロードできます。"
           />
 
           <FeatureCard
             icon={<Cloud className="h-6 w-6" />}
-            title="みんなで見る"
-            description="集まった写真をみんなで楽しめます。"
+            title="写真をまとめて楽しむ"
+            description="参加者から集まった写真をひとつの場所で見られるので、イベントの思い出を共有できます。"
           />
         </div>
       </div>

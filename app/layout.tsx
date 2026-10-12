@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -13,9 +14,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+
 export const metadata: Metadata = {
-  title: "Shutter Chance",
-  description: "ゲストみんなで特別な一瞬を共有する写真共有サービス",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "https://shutter-chance.vercel.app"
+  ),
+
+  title: {
+    default: "Shutter Chance｜イベントの写真共有サービス",
+    template: "%s | Shutter Chance",
+  },
+
+  description:
+    "イベントで撮影した写真を、みんなでかんたん共有。QRコードひとつで写真を集められ、ゲストはアプリのインストールや会員登録なしで参加できます。",
 
   applicationName: "Shutter Chance",
 
@@ -29,6 +40,20 @@ export const metadata: Metadata = {
     icon: "/icon.png",
     apple: "/apple-touch-icon.png",
   },
+
+  openGraph: {
+    type: "website",
+    locale: "ja_JP",
+    siteName: "Shutter Chance",
+    title: "Shutter Chance｜イベントの写真共有サービス",
+    description:
+      "結婚式、パーティー、同窓会などの写真を、QRコードひとつでかんたん共有。",
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
@@ -38,7 +63,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="ja"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
