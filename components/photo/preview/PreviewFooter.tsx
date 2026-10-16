@@ -48,7 +48,7 @@ export default function PreviewFooter({
           hover:bg-white/10
         "
       >
-        ＋ 写真を追加
+        ＋ アップロードする写真を追加
       </Button>
 
       <motion.button
@@ -86,7 +86,7 @@ export default function PreviewFooter({
             </>
           ):(
             <>
-              ✨ 写真を共有する
+              ✨ 写真をアップロード
             </>
           )
         }

@@ -21,12 +21,11 @@ export const metadata: Metadata = {
   ),
 
   title: {
-    default: "Shutter Chance｜イベントの写真共有サービス",
+    default: "イベント写真共有サービス｜Shutter Chance",
     template: "%s | Shutter Chance",
   },
 
-  description:
-    "イベントで撮影した写真を、みんなでかんたん共有。QRコードひとつで写真を集められ、ゲストはアプリのインストールや会員登録なしで参加できます。",
+  description: "イベントの写真を、QRコードひとつでかんたん共有。結婚式・二次会・同窓会・パーティーなど、ゲストはアプリ不要・無料で写真を共有できます。",
 
   applicationName: "Shutter Chance",
 
