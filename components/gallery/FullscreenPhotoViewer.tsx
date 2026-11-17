@@ -44,9 +44,6 @@ export default function FullscreenPhotoViewer({
 
   const photo = photos[currentIndex];
 
-  const touchStartX = useRef<number | null>(null);
-  const touchStartY = useRef<number | null>(null);
-
   // 1 = 次の写真
   // -1 = 前の写真
   const direction = useRef<1 | -1>(1);
@@ -55,14 +52,11 @@ export default function FullscreenPhotoViewer({
   // Delete
   // ========================================
 
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] =
-    useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] =useState(false);
 
-  const [isDeleting, setIsDeleting] =
-    useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const [deleteError, setDeleteError] =
-    useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // ========================================
   // Keyboard
@@ -130,65 +124,6 @@ export default function FullscreenPhotoViewer({
   const handleNext = () => {
     direction.current = 1;
     onNext();
-  };
-
-  // ========================================
-  // Touch
-  // ========================================
-
-  const handleTouchStart = (
-    e: React.TouchEvent
-  ) => {
-    touchStartX.current =
-      e.touches[0].clientX;
-
-    touchStartY.current =
-      e.touches[0].clientY;
-  };
-
-  const handleTouchEnd = (
-    e: React.TouchEvent
-  ) => {
-    if (
-      touchStartX.current === null ||
-      touchStartY.current === null
-    ) {
-      return;
-    }
-
-    const touchEndX =
-      e.changedTouches[0].clientX;
-
-    const touchEndY =
-      e.changedTouches[0].clientY;
-
-    const diffX =
-      touchEndX - touchStartX.current;
-
-    const diffY =
-      touchEndY - touchStartY.current;
-
-    touchStartX.current = null;
-    touchStartY.current = null;
-
-    // 縦方向の移動が大きければ無視
-    if (
-      Math.abs(diffY) >
-      Math.abs(diffX)
-    ) {
-      return;
-    }
-
-    // 小さな移動は無視
-    if (Math.abs(diffX) < 50) {
-      return;
-    }
-
-    if (diffX < 0) {
-      handleNext();
-    } else {
-      handlePrevious();
-    }
   };
 
   // ========================================
@@ -417,12 +352,10 @@ export default function FullscreenPhotoViewer({
             overflow-hidden
             bg-black
           "
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
         >
           {/* Previous */}
 
-          {currentIndex > 0 && (
+          {/* {currentIndex > 0 && (
             <button
               type="button"
               onClick={handlePrevious}
@@ -449,7 +382,7 @@ export default function FullscreenPhotoViewer({
             >
               <ChevronLeft size={28} />
             </button>
-          )}
+          )} */}
 
           {/* Photo */}
 
@@ -525,7 +458,7 @@ export default function FullscreenPhotoViewer({
 
           {/* Next */}
 
-          {currentIndex <
+          {/* {currentIndex <
             photos.length - 1 && (
             <button
               type="button"
@@ -553,7 +486,7 @@ export default function FullscreenPhotoViewer({
             >
               <ChevronRight size={28} />
             </button>
-          )}
+          )} */}
 
           {/* ======================================
               Photo Info

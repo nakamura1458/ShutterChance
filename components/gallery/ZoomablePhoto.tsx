@@ -26,6 +26,7 @@ export default function ZoomablePhoto({
   onSwipeRight,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
 
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({
@@ -85,6 +86,20 @@ export default function ZoomablePhoto({
   }, [src, resetZoom]);
 
   // ========================================
+  // Debug: Image Size
+  // ========================================
+
+  useEffect(() => {
+    const image = imageRef.current;
+    const container = containerRef.current;
+
+    if (!image || !container) return;
+
+    console.log("Image:", image.getBoundingClientRect());
+    console.log("Container:", container.getBoundingClientRect());
+  }, [src]);
+
+  // ========================================
   // Utility
   // ========================================
 
@@ -101,6 +116,50 @@ export default function ZoomablePhoto({
     return Math.sqrt(
       dx * dx + dy * dy
     );
+  };
+
+  // ========================================
+  // Position Limit
+  // ========================================
+
+  const clampPosition = (
+    x: number,
+    y: number,
+    currentScale: number
+  ) => {
+    const image = imageRef.current;
+    const container = containerRef.current;
+
+    if (!image || !container) {
+      return { x, y };
+    }
+
+    const imageRect = image.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    // 拡大前の画像サイズを取得
+    const imageWidth = imageRect.width / scaleRef.current;
+    const imageHeight = imageRect.height / scaleRef.current;
+
+    // 拡大後の画像サイズ
+    const scaledWidth = imageWidth * currentScale;
+    const scaledHeight = imageHeight * currentScale;
+
+    // 移動可能な最大距離
+    const maxX = Math.max(
+      0,
+      (scaledWidth - containerRect.width) / 2
+    );
+
+    const maxY = Math.max(
+      0,
+      (scaledHeight - containerRect.height) / 2
+    );
+
+    return {
+      x: Math.max(-maxX, Math.min(maxX, x)),
+      y: Math.max(-maxY, Math.min(maxY, y)),
+    };
   };
 
   // ========================================
@@ -256,17 +315,13 @@ export default function ZoomablePhoto({
         touch.clientY -
         dragStartRef.current.y;
 
-      const nextPosition = {
-        x:
-          dragStartPositionRef.current.x +
-          dx,
-        y:
-          dragStartPositionRef.current.y +
-          dy,
-      };
+      const nextPosition = clampPosition(
+        dragStartPositionRef.current.x + dx,
+        dragStartPositionRef.current.y + dy,
+        scaleRef.current
+      );
 
-      positionRef.current =
-        nextPosition;
+      positionRef.current = nextPosition;
 
       setPosition(nextPosition);
     }
@@ -414,17 +469,13 @@ export default function ZoomablePhoto({
       e.clientY -
       dragStartRef.current.y;
 
-    const nextPosition = {
-      x:
-        dragStartPositionRef.current.x +
-        dx,
-      y:
-        dragStartPositionRef.current.y +
-        dy,
-    };
+    const nextPosition = clampPosition(
+      dragStartPositionRef.current.x + dx,
+      dragStartPositionRef.current.y + dy,
+      scaleRef.current
+    );
 
-    positionRef.current =
-      nextPosition;
+    positionRef.current = nextPosition;
 
     setPosition(nextPosition);
   };
@@ -462,6 +513,7 @@ export default function ZoomablePhoto({
       }}
     >
       <img
+        ref={imageRef}
         src={src}
         alt={alt}
         draggable={false}
