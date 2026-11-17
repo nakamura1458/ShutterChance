@@ -86,20 +86,6 @@ export default function ZoomablePhoto({
   }, [src, resetZoom]);
 
   // ========================================
-  // Debug: Image Size
-  // ========================================
-
-  useEffect(() => {
-    const image = imageRef.current;
-    const container = containerRef.current;
-
-    if (!image || !container) return;
-
-    console.log("Image:", image.getBoundingClientRect());
-    console.log("Container:", container.getBoundingClientRect());
-  }, [src]);
-
-  // ========================================
   // Utility
   // ========================================
 
@@ -513,7 +499,6 @@ export default function ZoomablePhoto({
       }}
     >
       <img
-        ref={imageRef}
         src={src}
         alt={alt}
         draggable={false}
