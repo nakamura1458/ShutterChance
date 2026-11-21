@@ -89,7 +89,7 @@ export function useUpload({
               eventId,
               eventToken,
               guestName,
-              compressedFile,
+              compressedFile
             );
 
             // UI側には元のFileを返す

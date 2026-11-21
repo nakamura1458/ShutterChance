@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { deleteObject } from "@/lib/storage/r2-storage.service";
 
 const supabaseAdmin = createAdminClient();
 
@@ -91,6 +92,18 @@ export async function getMyEventByToken(
 export async function deleteEvent(
   eventId: string,
 ) {
+  // イベント情報取得
+  const { data: event, error: eventError } =
+    await supabaseAdmin
+      .from("events")
+      .select("id, storage_provider")
+      .eq("id", eventId)
+      .single();
+
+  if (eventError || !event) {
+    throw eventError ?? new Error("Event not found");
+  }
+
   // 写真取得
   const { data: photos, error: photosError } =
     await supabaseAdmin
@@ -109,13 +122,19 @@ export async function deleteEvent(
       .filter(Boolean);
 
   if (storagePaths.length > 0) {
-    const { error: storageError } =
-      await supabaseAdmin.storage
-        .from("events")
-        .remove(storagePaths);
+    if (event.storage_provider === "r2") {
+      await Promise.all(
+        storagePaths.map((path) => deleteObject(path))
+      );
+    } else {
+      const { error: storageError } =
+        await supabaseAdmin.storage
+          .from("events")
+          .remove(storagePaths);
 
-    if (storageError) {
-      throw storageError;
+      if (storageError) {
+        throw storageError;
+      }
     }
   }
 

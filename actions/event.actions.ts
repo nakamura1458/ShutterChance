@@ -223,6 +223,8 @@ export async function createEvent(
       event_token: eventToken,
       user_id: user.id,
 
+      storage_provider: "r2",
+
       plan: plan.id,
 
       max_upload_count: isAdmin

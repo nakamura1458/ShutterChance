@@ -1,10 +1,53 @@
 import { createClient } from "@/lib/supabase/server";
+import { getSignedDownloadUrl } from "@/lib/storage/r2-storage.service";
 import type { PhotoListItem } from "@/types/photo";
 
 export type PhotoSortOrder =
   | "newest"
   | "oldest"
   | "likes";
+
+type SupabaseClient = Awaited<
+  ReturnType<typeof createClient>
+>;
+
+// イベントの保存先を取得
+async function getStorageProvider(
+  supabase: SupabaseClient,
+  eventId: string,
+) {
+  const { data, error } = await supabase
+    .from("events")
+    .select("storage_provider")
+    .eq("id", eventId)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  // 既存イベントとの互換性を考慮
+  return data.storage_provider ?? "supabase";
+}
+
+// 写真の表示URLを生成
+async function getPhotoImageUrl(
+  supabase: SupabaseClient,
+  storageProvider: string,
+  storagePath: string,
+) {
+  if (storageProvider === "r2") {
+    return getSignedDownloadUrl({
+      key: storagePath,
+      expiresIn: 3600,
+    });
+  }
+
+  return supabase.storage
+    .from("events")
+    .getPublicUrl(storagePath)
+    .data.publicUrl;
+}
 
 // ========================================
 // 写真一覧取得
@@ -15,6 +58,11 @@ export async function getPhotos(
   eventId: string
 ): Promise<PhotoListItem[]> {
   const supabase = await createClient();
+
+  const storageProvider = await getStorageProvider(
+    supabase,
+    eventId,
+  );
 
   const { data, error } = await supabase
     .from("photos")
@@ -33,16 +81,19 @@ export async function getPhotos(
     throw error;
   }
 
-  return (data ?? []).map((photo) => ({
-    id: photo.id,
-    guest_name: photo.guest_name,
-    image_url: supabase.storage
-      .from("events")
-      .getPublicUrl(photo.storage_path)
-      .data.publicUrl,
-    created_at: photo.created_at,
-    like_count: 0,
-  }));
+  return Promise.all(
+    (data ?? []).map(async (photo) => ({
+      id: photo.id,
+      guest_name: photo.guest_name,
+      image_url: await getPhotoImageUrl(
+        supabase,
+        storageProvider,
+        photo.storage_path,
+      ),
+      created_at: photo.created_at,
+      like_count: 0,
+    })),
+  );
 }
 
 // ========================================
@@ -57,6 +108,11 @@ export async function getPhotosPaginated(
   guestNames: string[] = []
 ){
   const supabase = await createClient();
+
+  const storageProvider = await getStorageProvider(
+    supabase,
+    eventId,
+  );
 
   // ========================================
   // Photos
@@ -78,8 +134,8 @@ export async function getPhotosPaginated(
     throw error;
   }
 
-  const photos: PhotoListItem[] =
-    (data ?? []).map((photo: {
+  const photos: PhotoListItem[] = await Promise.all(
+    (data ?? []).map(async (photo: {
       id: string;
       guest_name: string | null;
       storage_path: string;
@@ -88,15 +144,15 @@ export async function getPhotosPaginated(
     }) => ({
       id: photo.id,
       guest_name: photo.guest_name,
-      image_url: supabase.storage
-        .from("events")
-        .getPublicUrl(photo.storage_path)
-        .data.publicUrl,
-      created_at: photo.created_at,
-      like_count: Number(
-        photo.like_count ?? 0
+      image_url: await getPhotoImageUrl(
+        supabase,
+        storageProvider,
+        photo.storage_path,
       ),
-    }));
+      created_at: photo.created_at,
+      like_count: Number(photo.like_count ?? 0),
+    })),
+  );
 
   // ========================================
   // Total count

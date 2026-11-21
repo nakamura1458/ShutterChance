@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { zipSync, strToU8 } from "fflate";
-
+import { zipSync } from "fflate";
+import { getSignedDownloadUrl } from "@/lib/storage/r2-storage.service";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getPhotosForBulkDownload } from "@/services/photo.service";
@@ -73,7 +73,8 @@ export async function GET(
         id,
         name,
         user_id,
-        allow_guest_download
+        allow_guest_download,
+        storage_provider
       `)
       .eq("event_token", eventToken)
       .maybeSingle();
@@ -160,10 +161,7 @@ export async function GET(
 
     const admin = createAdminClient();
 
-    const files: Record<
-      string,
-      Uint8Array
-    > = {};
+    const files: Record<string, Uint8Array> = {};
 
     for (
       let index = 0;
@@ -172,43 +170,67 @@ export async function GET(
     ) {
       const photo = photos[index];
 
-      const {
-        data: file,
-        error: fileError,
-      } = await admin.storage
-        .from("events")
-        .download(photo.storage_path);
+      try {
+        let buffer: Uint8Array;
 
-      if (fileError || !file) {
+        if (event.storage_provider === "r2") {
+          // R2から署名付きURL経由で取得
+          const signedUrl = await getSignedDownloadUrl({
+            key: photo.storage_path,
+            expiresIn: 300,
+          });
+
+          const response = await fetch(signedUrl);
+
+          if (!response.ok) {
+            throw new Error(
+              `R2 download failed: ${response.status}`
+            );
+          }
+
+          buffer = new Uint8Array(
+            await response.arrayBuffer()
+          );
+        } else {
+          // Supabase Storageから取得
+          const {
+            data: file,
+            error: fileError,
+          } = await admin.storage
+            .from("events")
+            .download(photo.storage_path);
+
+          if (fileError || !file) {
+            throw fileError ?? new Error("File not found");
+          }
+
+          buffer = new Uint8Array(
+            await file.arrayBuffer()
+          );
+        }
+
+        const number = String(
+          index + 1
+        ).padStart(4, "0");
+
+        const guestName =
+          sanitizeGuestName(photo.guest_name);
+
+        files[
+          `${number}_${guestName}.jpg`
+        ] = buffer;
+      } catch (error) {
         console.error(
           "bulk download storage error:",
           {
             photoId: photo.id,
-            storagePath:
-              photo.storage_path,
-            error: fileError,
+            storagePath: photo.storage_path,
+            error,
           }
         );
 
         continue;
       }
-
-      const buffer = new Uint8Array(
-        await file.arrayBuffer()
-      );
-
-      const number = String(
-        index + 1
-      ).padStart(4, "0");
-
-      const guestName =
-        sanitizeGuestName(
-          photo.guest_name
-        );
-
-      files[
-        `${number}_${guestName}.jpg`
-      ] = buffer;
     }
 
     // ========================================

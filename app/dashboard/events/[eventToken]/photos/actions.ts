@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { deleteObject } from "@/lib/storage/r2-storage.service";
 
 type DeletePhotoResult = {
   success: boolean;
@@ -36,7 +37,7 @@ export async function deletePhoto(
   const { data: event, error: eventError } =
     await supabase
       .from("events")
-      .select("id")
+      .select("id, storage_provider")
       .eq("event_token", eventToken)
       .eq("user_id", user.id)
       .single();
@@ -67,28 +68,36 @@ export async function deletePhoto(
     };
   }
 
-  // ========================================
-  // Storage削除
-  // ========================================
+    // ========================================
+    // Storage削除
+    // ========================================
 
-  const admin = createAdminClient();
+    const admin = createAdminClient();
 
-  const { error: storageError } =
-    await admin.storage
-      .from("events")
-      .remove([photo.storage_path]);
+    try {
+      if (event.storage_provider === "r2") {
+        await deleteObject(photo.storage_path);
+      } else {
+        const { error: storageError } =
+          await admin.storage
+            .from("events")
+            .remove([photo.storage_path]);
 
-  if (storageError) {
-    console.error(
-      "photo storage delete error",
-      storageError
-    );
+        if (storageError) {
+          throw storageError;
+        }
+      }
+    } catch (error) {
+      console.error(
+        "photo storage delete error",
+        error
+      );
 
-    return {
-      success: false,
-      error: "写真ファイルの削除に失敗しました。",
-    };
-  }
+      return {
+        success: false,
+        error: "写真ファイルの削除に失敗しました。",
+      };
+    }
 
   // ========================================
   // DB削除
@@ -157,7 +166,7 @@ export async function deletePhotos(
   const { data: event, error: eventError } =
     await supabase
       .from("events")
-      .select("id")
+      .select("id, storage_provider")
       .eq("event_token", eventToken)
       .eq("user_id", user.id)
       .single();
@@ -209,15 +218,27 @@ export async function deletePhotos(
 
   const admin = createAdminClient();
 
-  const { error: storageError } =
-    await admin.storage
-      .from("events")
-      .remove(storagePaths);
+  try {
+    if (event.storage_provider === "r2") {
+      await Promise.all(
+        storagePaths.map((path) =>
+          deleteObject(path)
+        )
+      );
+    } else {
+      const { error: storageError } =
+        await admin.storage
+          .from("events")
+          .remove(storagePaths);
 
-  if (storageError) {
+      if (storageError) {
+        throw storageError;
+      }
+    }
+  } catch (error) {
     console.error(
       "bulk photo storage delete error",
-      storageError
+      error
     );
 
     return {

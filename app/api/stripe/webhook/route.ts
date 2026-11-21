@@ -245,6 +245,8 @@ export async function POST(req: Request) {
             user_id: userId,
             plan: plan.id,
 
+            storage_provider: "r2",
+
             max_upload_count:
               plan.max_upload_count,
 
